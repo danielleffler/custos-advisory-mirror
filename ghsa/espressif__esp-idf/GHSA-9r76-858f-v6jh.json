@@ -1,0 +1,154 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Eun0us",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/106373581?v=4",
+    "events_url": "https://api.github.com/users/Eun0us/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Eun0us/followers",
+    "following_url": "https://api.github.com/users/Eun0us/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Eun0us/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Eun0us",
+    "id": 106373581,
+    "login": "Eun0us",
+    "node_id": "U_kgDOBlchzQ",
+    "organizations_url": "https://api.github.com/users/Eun0us/orgs",
+    "received_events_url": "https://api.github.com/users/Eun0us/received_events",
+    "repos_url": "https://api.github.com/users/Eun0us/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Eun0us/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Eun0us/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Eun0us",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-45542",
+ "cvss": {
+  "score": 7.1,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.1,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-122"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-122",
+   "name": "Heap-based Buffer Overflow"
+  }
+ ],
+ "description": "### Description\r\n\r\nA heap buffer overflow exists in the Security Scheme 2 (SRP6a) session-setup path of the `protocomm` component. The first-phase handler (`handle_session_command0()` in `components/protocomm/src/security/security2.c`) trusts the length of a client-supplied protobuf field for the SRP6a username and copies it into a buffer whose size is derived from a narrower destination type. The resulting truncation-versus-copy asymmetry corrupts the heap when an oversized value is supplied.\r\n\r\n### Impact\r\n\r\nAn unauthenticated attacker within Bluetooth Low Energy range can crash the device and corrupt heap data belonging to other tasks sharing the same heap by initiating a provisioning session with an oversized SRP6a username field. The vulnerable handler runs before any SRP6a credential check, so no proof of possession is required.\r\n\r\nThe flaw is reachable only when the application performs Wi-Fi provisioning (or another `protocomm` service) over the NimBLE BLE transport with Security Scheme 2 (`PROTOCOM_SEC_VER_2` / `WIFI_PROV_SECURITY_2`). The other `protocomm` transports (HTTP/SoftAP, Bluedroid BLE, console) bound inbound payload size at the transport layer and cannot reach the truncation threshold.\r\n\r\nAttacker position: **adjacent (BLE radio range)**. Consequence: **denial of service via heap corruption**. Code execution has not been demonstrated; the realistic worst case is loss of availability of the provisioning service and of any tasks sharing the corrupted heap region.\r\n\r\n### Resolution\r\n\r\n`handle_session_command0()` now validates the protobuf-supplied username length against the range of the destination type before any allocation or copy; out-of-range and zero-length values are rejected before reaching the heap path. As defence in depth, the subsequent copy uses the validated length rather than the raw protobuf length, so a future regression in the upstream check cannot reintroduce the truncation-versus-copy asymmetry.\r\n\r\nThe same commit also adds protobuf-input validation across both Security Scheme 1 and Security Scheme 2 handlers. These hardening changes are unrelated to the heap overflow described above and are documented here for completeness.\r\n\r\n### Fix Commit Records\r\n\r\n| Branch       | Commits |\r\n|--------------|---------|\r\n| master       | [a2f4554](https://github.com/espressif/esp-idf/commit/a2f4554f10ba075c98cbc67464db096ba32497cf) |\r\n| release/v6.0 | [9b4cacf](https://github.com/espressif/esp-idf/commit/9b4cacf9cbc69379972de6a2247fcf5af9240961) |\r\n| release/v5.5 | [71eb2db](https://github.com/espressif/esp-idf/commit/71eb2dbe6aaef830719ecac8edf409e2992b64b2) |\r\n| release/v5.4 | [f5d24a7](https://github.com/espressif/esp-idf/commit/f5d24a7e919bc5f447091479656b86da6762a103) |\r\n| release/v5.3 | [0ea58d7](https://github.com/espressif/esp-idf/commit/0ea58d79845ad674d0358d5de246015a68c4cb4f) |\r\n| release/v5.2 | [56c3e38](https://github.com/espressif/esp-idf/commit/56c3e385611e63162d0f2f8504ac4ae2ccfccef0) |\r\n\r\n### Workarounds\r\n\r\nThe recommended mitigation is to upgrade to a patched release. Where an upgrade is not immediately possible, exposure can be reduced by:\r\n\r\n- **Provision over SoftAP/HTTP instead of BLE**, where the device hardware and product use case allow it. The HTTP `protocomm` transport bounds request size at the transport layer.\r\n- **Restrict the provisioning window.** Enable BLE provisioning only during onboarding and tear it down (e.g. `wifi_prov_mgr_deinit()` / stop the protocomm BLE transport) immediately after the device is provisioned, so the vulnerable handshake is not exposed during normal operation.\r\n\r\n### Credits\r\n\r\nWe would like to thank Eun0us / Espilon Worker for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-9r76-858f-v6jh",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-9r76-858f-v6jh",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-9r76-858f-v6jh"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-45542"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-05-18T16:13:03Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Heap buffer overflow in protocomm Security2 over Bluetooth",
+ "updated_at": "2026-05-18T16:13:03Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-9r76-858f-v6jh",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.6 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.7 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.6"
+  }
+ ],
+ "withdrawn_at": null
+}

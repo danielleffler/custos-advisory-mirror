@@ -1,0 +1,145 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "nir-mo",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/17596873?v=4",
+    "events_url": "https://api.github.com/users/nir-mo/events{/privacy}",
+    "followers_url": "https://api.github.com/users/nir-mo/followers",
+    "following_url": "https://api.github.com/users/nir-mo/following{/other_user}",
+    "gists_url": "https://api.github.com/users/nir-mo/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/nir-mo",
+    "id": 17596873,
+    "login": "nir-mo",
+    "node_id": "MDQ6VXNlcjE3NTk2ODcz",
+    "organizations_url": "https://api.github.com/users/nir-mo/orgs",
+    "received_events_url": "https://api.github.com/users/nir-mo/received_events",
+    "repos_url": "https://api.github.com/users/nir-mo/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/nir-mo/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/nir-mo/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/nir-mo",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2024-53845",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-1204"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-1204",
+   "name": "Generation of Weak Initialization Vector (IV)"
+  }
+ ],
+ "description": "### Software component\r\n\r\nESP Wi-Fi Component: \r\n\r\n- https://github.com/espressif/esp-idf/tree/master/components/esp_wifi\r\n\r\nESPTouch Phone Apps Source:  \r\n\r\n- https://github.com/EspressifApp/EsptouchForAndroid/tree/master/esptouch-v2\r\n- https://github.com/EspressifApp/EsptouchForIOS/tree/master/EspTouchDemo/ESPTouchV2\r\n\r\n### Impact\r\nIn the ESPTouchV2 protocol, while there is an option to use a custom AES key, there is no option to set the IV (Initialization Vector). The IV is set to zero and remains constant throughout the product's lifetime.\r\nIn AES/CBC mode, if the IV is not properly initialized, the encrypted output becomes deterministic, leading to potential data leakage.\r\n\r\n### Patches\r\nTo address the aforementioned issues, the application generates a random IV when activating the AES key. This IV is then transmitted along with the provisioning data to the provisioning device.\r\n\r\nThe provisioning device has also been equipped with a parser for the AES IV.\r\n\r\nPatched versions of ESP-IDF Framework are listed below:\r\n\r\n| Branch | Commit          |\r\n| ------- | ------------------ |\r\n| master  |  <[8fb28dc](https://github.com/espressif/esp-idf/commit/8fb28dcedcc49916a5206456a3a61022d4302cd8)> |\r\n| release/v5.3  | <[fd224e8](https://github.com/espressif/esp-idf/commit/fd224e83bbf133833638b277c767be7f7cdd97c7)>  |\r\n| release/v5.2   | <[d47ed7d](https://github.com/espressif/esp-idf/commit/d47ed7d6f814e21c5bc8997ab0bc68e2360e5cb2)> |\r\n| release/v5.1  |  <[4f85a27](https://github.com/espressif/esp-idf/commit/4f85a2726e04b737c8646d865b44ddd837b703db)> |\r\n| release/v5.0  | <[de69895](https://github.com/espressif/esp-idf/commit/de69895f38d563e22228f5ba23fffa02feabc3a9)>  |\r\n\r\n### Workarounds\r\nThe upgrade is applicable for all applications and users of ESPTouch v2 component from ESP-IDF. As it is implemented in the ESP Wi-Fi stack, there is no workaround for the user to fix the application layer without upgrading the underlying firmware.\r\n",
+ "ghsa_id": "GHSA-wm57-466g-mhrr",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-wm57-466g-mhrr",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-wm57-466g-mhrr"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2024-53845"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2024-12-11T09:36:08Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "AES/CBC Constant IV Vulnerability in ESPTouch v2",
+ "updated_at": "2024-12-11T09:36:08Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-wm57-466g-mhrr",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESPTouch v2 (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.2",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESPTouch v2 (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESPTouch v2 (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.6 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESPTouch v2 (ESP-IDF)"
+   },
+   "patched_versions": "v5.0.8 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.0.7"
+  }
+ ],
+ "withdrawn_at": null
+}

@@ -1,0 +1,33 @@
+name: sync
+# Daily, before custos-server's advisory nightly (16:05 UTC) so a
+# nightly that clones this mirror sees a same-day sync. Commits only
+# when bytes moved; the git history is the audit archive every pin
+# record's commit hash points into.
+on:
+  schedule:
+    - cron: "35 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sync upstream legs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/sync.py
+      - name: Commit if changed
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git config user.name "custos-advisory-mirror sync"
+          git config user.email "noreply@custos.invalid"
+          git commit -m "sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push

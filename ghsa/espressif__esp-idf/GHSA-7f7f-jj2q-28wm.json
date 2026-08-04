@@ -1,0 +1,119 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2022-24893",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-787",
+  "CWE-788"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  },
+  {
+   "cwe_id": "CWE-788",
+   "name": "Access of Memory Location After End of Buffer"
+  }
+ ],
+ "description": "### Software Component\r\n\r\nESP BLE Mesh: https://github.com/espressif/esp-idf/tree/master/components/bt/esp_ble_mesh\r\nDocumentation: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp-ble-mesh.html\r\n\r\n### Impact\r\n\r\nIn Espressif\u2019s Bluetooth Mesh SDK (`ESP-BLE-MESH`), a memory corruption vulnerability can be triggered during provisioning, because there is no check for the `SegN` field of the Transaction Start PDU. This can result in memory corruption related attacks and potentially attacker gaining control of the entire system. \r\n\r\nNormally there are two fields in the Transaction Start PDU that need to be checked, i.e., the `TotalLength` field and the `SegN` field. Since we only checked the `TotalLength` field, an attacker can send a Provisioning PDU with an invalid `SegN` field, which will cause the message handled by the firmware to be much larger than the current buffer could store, thus causing a memory corruption issue to global buffer. \r\n\r\n\r\n### Patches\r\nPatched versions of ESP-IDF Framework are listed below:\r\n\r\n| Branch | Commit ID |\r\n|  :----:  | :----:  |\r\n| master    | < 5a87a9c65e00fd2ffc120c56f32e9f8145e8a11c > |\r\n| release/v4.4 | < c41208550aef5f4782aa90ab3a710e53063a615b > |\r\n| release/v4.3 | < b4ef1b80a217a6e9171e9f5b1c6fab7c4c3c649b > |\r\n| release/v4.2 | < 8b422cd8b14b0a1ee6c79f37ef8ece987de367dc > |\r\n| release/v4.1 | < 3cc92c92dc72fd546d326e612604592034ae5e57 > |\r\n\r\n### Workarounds\r\nThe upgrade is applicable for all applications and users of `ESP-BLE-MESH` component from `ESP-IDF`. As it is implemented in the Bluetooth Mesh stack, there is no workaround for the user to fix the application layer without upgrading the underlying firmware.\r\n\r\n### References\r\nNone Applicable\r\n\r\n### Credits\r\nWe would like to thank Han Yan, Lewei Qu and Dongxiang Ke from Baidu AIoT Security Team for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-7f7f-jj2q-28wm",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-7f7f-jj2q-28wm",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-7f7f-jj2q-28wm"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2022-24893"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2022-06-23T11:43:07Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Espressif Bluetooth Mesh Stack Vulnerability ",
+ "updated_at": "2022-06-23T11:43:07Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-7f7f-jj2q-28wm",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "esp-idf",
+    "name": "ESP-BLE-MESH"
+   },
+   "patched_versions": "v4.4.2",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v4.4.1"
+  },
+  {
+   "package": {
+    "ecosystem": "esp-idf",
+    "name": "ESP-BLE-MESH"
+   },
+   "patched_versions": "v4.3.3",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v4.3.2"
+  },
+  {
+   "package": {
+    "ecosystem": "esp-idf",
+    "name": "ESP-BLE-MESH"
+   },
+   "patched_versions": "v4.2.4",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v4.2.3"
+  },
+  {
+   "package": {
+    "ecosystem": "esp-idf",
+    "name": "ESP-BLE-MESH"
+   },
+   "patched_versions": "v4.1.4",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v4.1.3"
+  }
+ ],
+ "withdrawn_at": null
+}

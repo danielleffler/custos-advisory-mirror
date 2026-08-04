@@ -1,0 +1,147 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "JLLeitschuh",
+   "type": "reporter"
+  },
+  {
+   "login": "lucasssvaz",
+   "type": "remediation_verifier"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/1323708?v=4",
+    "events_url": "https://api.github.com/users/JLLeitschuh/events{/privacy}",
+    "followers_url": "https://api.github.com/users/JLLeitschuh/followers",
+    "following_url": "https://api.github.com/users/JLLeitschuh/following{/other_user}",
+    "gists_url": "https://api.github.com/users/JLLeitschuh/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/JLLeitschuh",
+    "id": 1323708,
+    "login": "JLLeitschuh",
+    "node_id": "MDQ6VXNlcjEzMjM3MDg=",
+    "organizations_url": "https://api.github.com/users/JLLeitschuh/orgs",
+    "received_events_url": "https://api.github.com/users/JLLeitschuh/received_events",
+    "repos_url": "https://api.github.com/users/JLLeitschuh/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/JLLeitschuh/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/JLLeitschuh/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/JLLeitschuh",
+    "user_view_type": "public"
+   }
+  },
+  {
+   "state": "accepted",
+   "type": "remediation_verifier",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+    "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+    "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+    "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/lucasssvaz",
+    "id": 32426024,
+    "login": "lucasssvaz",
+    "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+    "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+    "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+    "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/lucasssvaz",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2025-53007",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-113"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-113",
+   "name": "Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Request/Response Splitting')"
+  }
+ ],
+ "description": "### Security Vulnerability Report\r\n\r\n**Repository:** espressif/arduino-esp32  \r\n**File:** libraries/WebServer/src/WebServer.cpp  \r\n**Function:** `void WebServer::sendHeader(const String& name, const String& value, bool first)`  \r\n**Lines:** 504\u2013521, 577-582\r\n\r\n#### Code Snippet\r\n\r\nHeaders are added to the server response here:\r\n\r\nhttps://github.com/espressif/arduino-esp32/blob/9e61fa7e4bce59c05cb17c15b11b53b9bafca077/libraries/WebServer/src/WebServer.cpp#L504-L521\r\n\r\n```cpp\r\n void WebServer::sendHeader(const String &name, const String &value, bool first) { \r\n   RequestArgument *header = new RequestArgument(); \r\n   header->key = name; \r\n   header->value = value; \r\n  \r\n   if (!_responseHeaders || first) { \r\n     header->next = _responseHeaders; \r\n     _responseHeaders = header; \r\n   } else { \r\n     RequestArgument *last = _responseHeaders; \r\n     while (last->next) { \r\n       last = last->next; \r\n     } \r\n     last->next = header; \r\n   } \r\n  \r\n   _responseHeaderCount++; \r\n }\r\n```\r\n\r\nThose headers are concatenated into the HTTP response body here:\r\n\r\nhttps://github.com/espressif/arduino-esp32/blob/9e61fa7e4bce59c05cb17c15b11b53b9bafca077/libraries/WebServer/src/WebServer.cpp#L577-L582\r\n\r\n```cpp\r\n for (RequestArgument *header = _responseHeaders; header; header = header->next) { \r\n   response.concat(header->key); \r\n   response.concat(F(\": \")); \r\n   response.concat(header->value); \r\n   response.concat(F(\"\\r\\n\")); \r\n } \r\n```\r\n\r\n---\r\n\r\n### Vulnerability Overview\r\n\r\n#### **Type:** HTTP Response Splitting (CWE-113)\r\n\r\n#### **Description:**\r\nThe `sendHeader` function takes arbitrary input for the HTTP header name and value, concatenates them into an HTTP header line, and appends this to the outgoing HTTP response headers. There is **no validation or sanitization** of the `name` or `value` parameters before they are included in the HTTP response.\r\n\r\nIf an attacker can control the input to `sendHeader` (either directly or indirectly), they could inject carriage return (`\\r`) or line feed (`\\n`) characters into either the header name or value. This could allow the attacker to:\r\n\r\n- Inject additional headers\r\n- Manipulate the structure of the HTTP response\r\n- Potentially inject an entire new HTTP response (HTTP Response Splitting)\r\n- Cause header confusion or other HTTP protocol attacks\r\n\r\n#### **Impact:**\r\n\r\n- **HTTP Response Splitting:** If user-supplied input is passed to `sendHeader` without sanitization, an attacker could perform HTTP response splitting, leading to:\r\n  - Cross-site scripting (XSS)\r\n  - Cache poisoning\r\n  - Session fixation\r\n  - Bypassing CORS or security headers\r\n\r\n- **General Protocol Violation:** Invalid HTTP headers or malformed responses, potentially breaking clients or enabling additional attacks.\r\n\r\n---\r\n\r\n### Example Attack Scenario\r\n\r\nIf an attacker can cause a value such as:\r\n\r\n```\r\nattacker_value = \"injected\\r\\nSet-Cookie: session=evil\"\r\n```\r\n\r\nto be passed as the `value` argument, the resulting HTTP response would contain:\r\n\r\n```\r\nHeader-Name: injected\r\nSet-Cookie: session=evil\r\n```\r\n\r\nThis would let the attacker set arbitrary headers or even break the response into separate responses.\r\n\r\n---\r\n\r\n### Recommendation\r\n\r\n**Input Validation:**\r\n\r\n- Reject or sanitize any `\\r` (carriage return) or `\\n` (line feed) characters in both the header name and value.\r\n- Only allow printable ASCII characters for header names.\r\n- Consider providing a whitelisted set of allowed headers, or at least validating against a strict header name pattern.\r\n\r\n**Example Fix:**\r\n```cpp\r\nvoid WebServer::sendHeader(const String& name, const String& value, bool first) {\r\n  if (name.indexOf('\\r') != -1 || name.indexOf('\\n') != -1 ||\r\n      value.indexOf('\\r') != -1 || value.indexOf('\\n') != -1) {\r\n    log_e(\"Invalid character in HTTP header name or value\");\r\n    return;\r\n  }\r\n   RequestArgument *header = new RequestArgument(); \r\n   header->key = name; \r\n   header->value = value; \r\n  \r\n   if (!_responseHeaders || first) { \r\n     header->next = _responseHeaders; \r\n     _responseHeaders = header; \r\n   } else { \r\n     RequestArgument *last = _responseHeaders; \r\n     while (last->next) { \r\n       last = last->next; \r\n     } \r\n     last->next = header; \r\n   } \r\n  \r\n   _responseHeaderCount++; \r\n}\r\n```\r\n\r\n---\r\n\r\n### Fix\r\n\r\nThis vulnerability is addressed in this commit: https://github.com/espressif/arduino-esp32/commit/21640ac82a1bb5efa8cf0b3841be1ac80add6785\r\nIt has been patched in versions: `>= 3.3.0-RC1, >= 3.2.1`\r\n\r\n\r\n### References\r\n\r\n- [CWE-113: Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')](https://cwe.mitre.org/data/definitions/113.html)\r\n- [OWASP: HTTP Response Splitting](https://owasp.org/www-community/attacks/HTTP_Response_Splitting)\r\n\r\n---\r\n\r\n### Severity\r\n\r\n**High** \u2014 If user input is ever passed to this function without validation, this can lead to serious web security issues, including XSS and session hijacking.",
+ "ghsa_id": "GHSA-5476-9jjq-563m",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-5476-9jjq-563m",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-5476-9jjq-563m"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-53007"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-06-26T13:49:49Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "CRLF injection in WebServer.cpp",
+ "updated_at": "2025-06-26T13:49:49Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-5476-9jjq-563m",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "arduino-esp32"
+   },
+   "patched_versions": ">= 3.3.0-RC1, >= 3.2.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "<= 3.3.0-alpha1, <= 3.2.0"
+  }
+ ],
+ "withdrawn_at": null
+}

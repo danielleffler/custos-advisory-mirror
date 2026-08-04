@@ -1,0 +1,154 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Eun0us",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/106373581?v=4",
+    "events_url": "https://api.github.com/users/Eun0us/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Eun0us/followers",
+    "following_url": "https://api.github.com/users/Eun0us/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Eun0us/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Eun0us",
+    "id": 106373581,
+    "login": "Eun0us",
+    "node_id": "U_kgDOBlchzQ",
+    "organizations_url": "https://api.github.com/users/Eun0us/orgs",
+    "received_events_url": "https://api.github.com/users/Eun0us/received_events",
+    "repos_url": "https://api.github.com/users/Eun0us/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Eun0us/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Eun0us/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Eun0us",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-45541",
+ "cvss": {
+  "score": 7.5,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.5,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-476"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-476",
+   "name": "NULL Pointer Dereference"
+  }
+ ],
+ "description": "### Description\r\n\r\nA NULL-pointer dereference exists in the WebSocket subprotocol-negotiation path of the `esp_http_server` component. While parsing the client-supplied `Sec-WebSocket-Protocol` request header during the WebSocket handshake, the tokenisation result is dereferenced without a NULL check, so a malformed header value can crash the server before any application-level authentication runs.\r\n\r\n### Impact\r\n\r\nA remote network attacker who can reach the HTTP(S) server endpoint can crash the device without authentication or user interaction. Server-side TLS (`esp_https_server`) does not mitigate the issue, because the vulnerable parser executes during the WebSocket handshake, before any application-level authentication.\r\n\r\nThe flaw is reachable only when the application is built with WebSocket support enabled and registers at least one WebSocket URI handler that performs subprotocol negotiation (i.e. supplies a non-NULL `supported_subprotocol`).\r\n\r\nAttacker position: **network**. Consequence: **denial of service** \u2014 target faults; no information disclosure and no write side-effects.\r\n\r\n### Resolution\r\n\r\nThe parsing loop in `httpd_ws_get_response_subprotocol()`  (`components/esp_http_server/src/httpd_ws.c`) is restructured so the tokenisation result is NULL-checked before every dereference. A header that yields no tokens is handled identically to a request for an unsupported subprotocol: the handshake completes without a `Sec-WebSocket-Protocol` response header. The same change also tightens subprotocol matching from a prefix comparison to an exact-length comparison, an unrelated functional correctness improvement. No public API or behavioural change for compliant clients.\r\n\r\n### Fix Commit Records\r\n\r\n| Branch       | Commits |\r\n|--------------|---------|\r\n| master       | [9fc0ca1](https://github.com/espressif/esp-idf/commit/9fc0ca13b3b85b98d32b98cd9dc8ff9d82642b7b) |\r\n| release/v6.0 | [0dc4ee7](https://github.com/espressif/esp-idf/commit/0dc4ee7537f3b12350f5966cecacd59bba840ec6) |\r\n| release/v5.5 | [00a2f7f](https://github.com/espressif/esp-idf/commit/00a2f7fbbbd8fe6d04729022e1d5c9a49435bfe8) |\r\n| release/v5.4 | [37508ab](https://github.com/espressif/esp-idf/commit/37508ab91124ef426a7396d30f79eba1162700c7) |\r\n| release/v5.3 | [f88a47e](https://github.com/espressif/esp-idf/commit/f88a47e4f37fb11ae4b0908cd5c80059d83198c6) |\r\n| release/v5.2 | [dc46dc5](https://github.com/espressif/esp-idf/commit/dc46dc51359749e50617eb70d6f9ae298adc4fff) |\r\n\r\n### Workarounds\r\n\r\nThe recommended mitigation is to upgrade to a patched release. Where an upgrade is not immediately possible, exposure can be reduced by one of:\r\n\r\n- Registering WebSocket URI handlers without subprotocol negotiation (leave `supported_subprotocol` as `NULL`). The     vulnerable code path is only entered when an application-supplied subprotocol is present, so applications that do not require a specific subprotocol can drop this field as an interim measure.\r\n- Enabling mutual TLS authentication on the HTTPS server, so untrusted clients are rejected during the TLS handshake before the WebSocket parser is reached.\r\n\r\n### Credits\r\n\r\nWe would like to thank Eun0us / Espilon Worker for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-3j8v-xgrq-5vg8",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-3j8v-xgrq-5vg8",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-3j8v-xgrq-5vg8"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-45541"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-05-15T05:23:12Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Remote Null Pointer Dereference in WebSocket Server",
+ "updated_at": "2026-05-15T05:23:12Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-3j8v-xgrq-5vg8",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP HTTP Server (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP HTTP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP HTTP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP HTTP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.6 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP HTTP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.7 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.6"
+  }
+ ],
+ "withdrawn_at": null
+}

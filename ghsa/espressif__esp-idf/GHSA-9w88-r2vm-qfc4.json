@@ -1,0 +1,92 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2025-55297",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-120",
+  "CWE-131"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-120",
+   "name": "Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')"
+  },
+  {
+   "cwe_id": "CWE-131",
+   "name": "Incorrect Calculation of Buffer Size"
+  }
+ ],
+ "description": "### Software Component  \r\n\r\n- [BluFi (Bluetooth Wi-Fi Provisioning) Example](https://github.com/espressif/esp-idf/tree/master/examples/bluetooth/blufi)  \r\n- [Documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/ble/blufi.html)  \r\n\r\nThe BluFi example bundled in ESP-IDF was vulnerable to memory overflows in two areas: Wi-Fi credential handling and Diffie\u2013Hellman key exchange.\r\n\r\n### Impact\r\n\r\nThe BluFi example in ESP-IDF contained memory overflow vulnerabilities in two areas: Wi-Fi credential handling and Diffie\u2013Hellman key exchange.\r\n\r\nIn the credential handling functions, `strncpy` was incorrectly used with the input length instead of the size of the destination buffer. This flaw allowed an attacker to overflow buffers located in global memory.\r\n\r\nDuring the Diffie\u2013Hellman key exchange, a fixed-size buffer was used to store the public key without validating its size against peer-supplied parameters. This could result in buffer overflows, leading to memory corruption or unexpected behavior.\r\n\r\n### Patches\r\n\r\nThe issues were addressed in the following commits:\r\n\r\n| Branch | Commits |\r\n| -----------| --------------|\r\n| master | [abc18e93](https://github.com/espressif/esp-idf/commit/abc18e93eb3500dbec74c3e589671ef82c8b3919) & [3fc6c939](https://github.com/espressif/esp-idf/commit/3fc6c93936077cb1659e1f0e0268e62cf6423e9d) |\r\n| v5.4   | [f77da0d5](https://github.com/espressif/esp-idf/commit/f77da0d5b5382635c99e6708551b73802ad1213d) & [5f93ec3b](https://github.com/espressif/esp-idf/commit/5f93ec3b11b6115475c34de57093b3672d594e8f) |\r\n| v5.3   | [12b7a9e6](https://github.com/espressif/esp-idf/commit/12b7a9e6d78012ab9184b7ccdb5524364bf7e345) & [f40aa9c5](https://github.com/espressif/esp-idf/commit/f40aa9c587a8e570dfde2e6330382dcd170d5a5d) |\r\n| v5.2   | [e65cf7ea](https://github.com/espressif/esp-idf/commit/e65cf7ea2a2be52219ec9d4efc44aed5e490e91c) & [bf50c0c1](https://github.com/espressif/esp-idf/commit/bf50c0c197af30990026c8f8286298d2aa5a3c99) |\r\n| v5.1   | [cb6929a2](https://github.com/espressif/esp-idf/commit/cb6929a2e6f2ff130b742332dc15eb23006c7cc9) & [b1657d9d](https://github.com/espressif/esp-idf/commit/b1657d9dd4d0e48ed25e02cb8fe8413f479a2a84) |\r\n| v5.0   | [9cb7206d](https://github.com/espressif/esp-idf/commit/9cb7206d4ae8fd8f4296cd57d6c78a1656f42efa) & [cc00e9f2](https://github.com/espressif/esp-idf/commit/cc00e9f2fc4f7e8fbaff27851b4a8b45fa483501) |\r\n\r\n### Recommendations\r\n\r\n- Upgrade to a BluFi application version that includes the fix. If you prefer not to upgrade, then you can cherry-pick the relevant fixes.\r\n- The default encryption/decryption logic in this example is intended for demonstration purposes only. If you require a higher level of security, it is recommended to implement your own encryption, decryption, authentication, and checksum algorithms by customizing the security callbacks in the BluFi framework (see [`esp_blufi_api.c`](https://github.com/espressif/esp-idf/blob/4e036983a751e4667ade94c8f6f6bf1e7f78eff0/components/bt/common/api/esp_blufi_api.c#L14)).\r\n\r\n### References\r\n\r\n- [NCC Group Technical Advisory on BluFi Example](https://www.nccgroup.com/research-blog/technical-advisory-espressif-systems-esp32-blufi-reference-application-vulnerabilities/)  \r\n\r\n### Credits\r\n\r\nWe would like to thank the NCC Group for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-9w88-r2vm-qfc4",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-9w88-r2vm-qfc4",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-9w88-r2vm-qfc4"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-55297"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-08-21T04:08:29Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "BluFi Example Memory Overflow Vulnerability",
+ "updated_at": "2025-08-21T04:08:29Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-9w88-r2vm-qfc4",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": " BluFi Example (ESP-IDF) "
+   },
+   "patched_versions": "NA",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "NA"
+  }
+ ],
+ "withdrawn_at": null
+}

@@ -1,0 +1,118 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "JLLeitschuh",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/1323708?v=4",
+    "events_url": "https://api.github.com/users/JLLeitschuh/events{/privacy}",
+    "followers_url": "https://api.github.com/users/JLLeitschuh/followers",
+    "following_url": "https://api.github.com/users/JLLeitschuh/following{/other_user}",
+    "gists_url": "https://api.github.com/users/JLLeitschuh/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/JLLeitschuh",
+    "id": 1323708,
+    "login": "JLLeitschuh",
+    "node_id": "MDQ6VXNlcjEzMjM3MDg=",
+    "organizations_url": "https://api.github.com/users/JLLeitschuh/orgs",
+    "received_events_url": "https://api.github.com/users/JLLeitschuh/received_events",
+    "repos_url": "https://api.github.com/users/JLLeitschuh/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/JLLeitschuh/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/JLLeitschuh/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/JLLeitschuh",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2025-53540",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": 9.4,
+   "vector_string": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H"
+  }
+ },
+ "cwe_ids": [
+  "CWE-352"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-352",
+   "name": "Cross-Site Request Forgery (CSRF)"
+  }
+ ],
+ "description": "**Summary:**  \r\nSeveral OTA update examples and the `HTTPUpdateServer` implementation in this repository are vulnerable to Cross-Site Request Forgery (CSRF). The update endpoints accept POST requests for firmware uploads without CSRF protection. This allows an attacker to upload and execute arbitrary firmware, resulting in remote code execution (RCE).\r\n\r\n**Impacted Source Files:**  \r\n- [libraries/Update/examples/OTAWebUpdater/OTAWebUpdater.ino](https://github.com/espressif/arduino-esp32/blob/21640ac82a1bb5efa8cf0b3841be1ac80add6785/libraries/Update/examples/OTAWebUpdater/OTAWebUpdater.ino)  \r\n- [libraries/WebServer/examples/WebUpdate/WebUpdate.ino](https://github.com/espressif/arduino-esp32/blob/21640ac82a1bb5efa8cf0b3841be1ac80add6785/libraries/WebServer/examples/WebUpdate/WebUpdate.ino)  \r\n- [libraries/HTTPUpdateServer/src/HTTPUpdateServer.h](https://github.com/espressif/arduino-esp32/blob/21640ac82a1bb5efa8cf0b3841be1ac80add6785/libraries/HTTPUpdateServer/src/HTTPUpdateServer.h)  \r\n\r\n**Vulnerability Details:**  \r\n- The firmware update endpoints (e.g., `/update`) do not implement CSRF protections such as anti-CSRF tokens or Origin/Referer header checks.\r\n- In the provided examples, and by default in HTTPUpdateServer, the update endpoint may be unauthenticated or left unauthenticated by users following the examples.\r\n- Even if authentication is enabled (e.g., via username and password), **CSRF remains a risk:** if a user is already logged in via their browser, a CSRF attack will still work because the browser will send the saved credentials (e.g., via cookies or HTTP auth) along with the forged request.\r\n- An attacker can trick a user (who is on the same network as an ESP32 device running vulnerable code) into visiting a malicious website that silently uploads a malicious firmware image to the device\u2019s update endpoint.\r\n\r\n**Attack Scenario:**  \r\n1. The device is connected to a local network running any of the vulnerable examples or code.\r\n2. A user who previously authenticated to the device's update endpoint visits a malicious website.\r\n3. The site issues a POST request (with a malicious firmware image) to the device\u2019s `/update` endpoint.\r\n4. The browser automatically includes the user\u2019s credentials, if any.\r\n5. The device installs and runs the attacker\u2019s firmware (RCE).\r\n\r\n**Impact:**  \r\n- Remote code execution on affected ESP32 devices.\r\n- Complete compromise of device integrity and functionality.\r\n- Potential lateral movement within local networks.\r\n\r\n**Proof of Concept (PoC):**  \r\nA minimal HTML page that exploits the vulnerability (user must be on the same network as the device):\r\n\r\n```html\r\n<form id=\"csrf\" action=\"http://<device-ip>/update\" method=\"POST\" enctype=\"multipart/form-data\">\r\n  <input type=\"file\" name=\"update\" />\r\n  <input type=\"submit\" value=\"Upload malicious firmware\" />\r\n</form>\r\n<script>\r\n  // To send automatically with a malicious payload, use fetch or submit via JS\r\n</script>\r\n```\r\n\r\n**Recommended Remediation:**  \r\n- Require authentication for all update endpoints by default (username/password).\r\n- Implement CSRF protection on all web forms (per-session random tokens, and/or Origin/Referer checks).\r\n- Advise in documentation that authentication mitigates but does not eliminate CSRF risk\u2014anti-CSRF measures are required even when authentication is used.\r\n\r\n**References:**  \r\n- [OWASP: Cross-Site Request Forgery (CSRF)](https://owasp.org/www-community/attacks/csrf)\r\n- [OWASP: Firmware Defense](https://owasp.org/owasp-istg/03_test_cases/firmware/firmware_update_mechanism.html)\r\n",
+ "ghsa_id": "GHSA-9vfw-wx65-c872",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-9vfw-wx65-c872",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-9vfw-wx65-c872"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-53540"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-06-30T12:59:06Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/12663778?v=4",
+  "events_url": "https://api.github.com/users/me-no-dev/events{/privacy}",
+  "followers_url": "https://api.github.com/users/me-no-dev/followers",
+  "following_url": "https://api.github.com/users/me-no-dev/following{/other_user}",
+  "gists_url": "https://api.github.com/users/me-no-dev/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/me-no-dev",
+  "id": 12663778,
+  "login": "me-no-dev",
+  "node_id": "MDQ6VXNlcjEyNjYzNzc4",
+  "organizations_url": "https://api.github.com/users/me-no-dev/orgs",
+  "received_events_url": "https://api.github.com/users/me-no-dev/received_events",
+  "repos_url": "https://api.github.com/users/me-no-dev/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/me-no-dev/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/me-no-dev/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/me-no-dev",
+  "user_view_type": "public"
+ },
+ "severity": "critical",
+ "state": "published",
+ "submission": null,
+ "summary": "CSRF Vulnerability in Firmware Update Endpoints Allows Remote Code Execution",
+ "updated_at": "2025-07-07T14:45:13Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-9vfw-wx65-c872",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "arduino",
+    "name": "ESP32 Arduino"
+   },
+   "patched_versions": "3.2.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "< 3.2.1"
+  }
+ ],
+ "withdrawn_at": null
+}

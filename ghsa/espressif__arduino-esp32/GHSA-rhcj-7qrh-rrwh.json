@@ -1,0 +1,83 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": null,
+ "cvss": {
+  "score": 8.8,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:H/A:L"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 8.8,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:H/A:L"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-829"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-829",
+   "name": "Inclusion of Functionality from Untrusted Control Sphere"
+  }
+ ],
+ "description": "### Summary\r\n\r\nA GitHub Actions workflow in `espressif/arduino-esp32` appears to execute pull request-controlled code in a privileged `pull_request_target` context.\r\n\r\nThe affected workflow is:\r\n\r\n```text\r\n.github/workflows/dangerjs.yml\r\n````\r\n\r\nThe issue was verified against:\r\n\r\n```text\r\nRepository: espressif/arduino-esp32\r\nBranch: master\r\nCommit: e6858ea1279d3f32cf21e911ccca37bc013bb6c8\r\n```\r\n\r\nThe high-level chain is:\r\n\r\n```text\r\npull_request_target\r\n  -> checkout github.event.pull_request.head.sha\r\n  -> run espressif/shared-github-dangerjs\r\n  -> DangerJS resolves attacker-controlled dangerfile.mts / dangerfile.mjs before dangerfile.ts\r\n  -> attacker-controlled code executes\r\n  -> GITHUB_TOKEN is available in the same process\r\n```\r\n\r\nThe workflow grants:\r\n\r\n```yaml\r\npermissions:\r\n  pull-requests: write\r\n  contents: read\r\n```\r\n\r\nand passes the token to the DangerJS action:\r\n\r\n```yaml\r\nenv:\r\n  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\r\n```\r\n\r\nThis allows attacker-controlled DangerJS code to run with access to a GitHub token that has `pull-requests: write`.\r\n\r\nI am intentionally omitting destructive payloads and credential exfiltration commands from this report.\r\n\r\n### Details\r\n\r\nThe workflow is triggered by `pull_request_target`:\r\n\r\n```yaml\r\non:\r\n  pull_request_target:\r\n    types: [opened, edited, reopened, synchronize]\r\n```\r\n\r\nIt then checks out the pull request head SHA:\r\n\r\n```yaml\r\n- name: Check out PR head\r\n  uses: actions/checkout@...\r\n  with:\r\n    ref: ${{ github.event.pull_request.head.sha }}\r\n```\r\n\r\nThis places pull request-controlled files into the workspace while the workflow is running in the base repository context.\r\n\r\nThe workflow then runs:\r\n\r\n```yaml\r\n- name: DangerJS pull request linter\r\n  uses: espressif/shared-github-dangerjs@fb17367fd3e8ff7412603b8e946d9b19ffdb2d7f\r\n  env:\r\n    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}\r\n```\r\n\r\nThe relevant behavior in the shared DangerJS action is:\r\n\r\n```text\r\nentrypoint.sh\r\n  -> cp -r /src/* /github/workspace\r\n  -> cd /github/workspace\r\n  -> npx danger ci --failOnErrors -v\r\n```\r\n\r\nThe action appears to provide a legitimate `dangerfile.ts`, but not higher-priority `dangerfile.mts` or `dangerfile.mjs` files.\r\n\r\nDangerJS resolves Dangerfiles in a priority order where `dangerfile.mts` and `dangerfile.mjs` are checked before `dangerfile.ts`. Therefore, if an attacker includes a `dangerfile.mts` or `dangerfile.mjs` in the pull request, that file can survive the action\u2019s copy operation and be selected by DangerJS before the intended `dangerfile.ts`.\r\n\r\nThe vulnerable trust boundary is:\r\n\r\n```text\r\nexternal fork pull request\r\n  -> attacker-controlled dangerfile.mts / dangerfile.mjs\r\n  -> pull_request_target workflow\r\n  -> checkout PR head SHA\r\n  -> DangerJS executes attacker-controlled Dangerfile\r\n  -> process.env.GITHUB_TOKEN is available\r\n```\r\n\r\n### PoC\r\n\r\nA non-destructive validation can be performed without reading or exfiltrating the token.\r\n\r\n1. Fork the repository.\r\n2. Open a pull request against `espressif/arduino-esp32`.\r\n3. In the PR branch, add a benign `dangerfile.mts`:\r\n\r\n```typescript\r\nexport default async function dangerfile() {\r\n  console.log(\"ARDUINO_ESP32_DANGER_MARKER\");\r\n}\r\n```\r\n\r\n4. Allow the `DangerJS Pull Request linter` workflow to run.\r\n5. Observe whether the marker is printed by the DangerJS execution path.\r\n\r\nThis validates that the pull request-controlled Dangerfile is executed in the `pull_request_target` workflow context.\r\n\r\nA malicious variant could read `process.env.GITHUB_TOKEN`, but I did not test or include any credential access or exfiltration payload.\r\n\r\n### Impact\r\n\r\nSuccessful exploitation may allow an external pull request author to execute arbitrary JavaScript/TypeScript code in a privileged `pull_request_target` workflow context.\r\n\r\nThe impact is security-relevant because:\r\n\r\n* the workflow runs in the base repository context;\r\n* it checks out attacker-controlled pull request code;\r\n* it runs DangerJS from that workspace;\r\n* `GITHUB_TOKEN` is explicitly available as an environment variable;\r\n* the workflow grants `pull-requests: write`.\r\n\r\nPotential attacker actions may include:\r\n\r\n* reading or misusing `process.env.GITHUB_TOKEN`;\r\n* creating, editing, or deleting PR comments where allowed by the token;\r\n* manipulating pull request review or automation signals;\r\n* abusing any repository operation permitted by the workflow token\u2019s effective scopes.\r\n\r\nThis report does not rely only on arbitrary code execution. The key issue is attacker-controlled code execution in the same process context as a write-scoped GitHub token.\r\n\r\n### Suggested remediation\r\n\r\nRecommended fixes:\r\n\r\n1. Do not check out pull request head code in a `pull_request_target` workflow before running tools that can execute repository-controlled files.\r\n\r\n2. Prefer running DangerJS on `pull_request` with read-only permissions when analyzing untrusted PR code.\r\n\r\n3. If `pull_request_target` is required for PR comments, split the workflow:\r\n\r\n   * unprivileged job: analyze PR code without secrets or write tokens;\r\n   * privileged job: post comments using trusted generated results only.\r\n\r\n4. Do not run DangerJS from a workspace containing attacker-controlled Dangerfiles.\r\n\r\n5. Explicitly select the trusted Dangerfile path supplied by the action, rather than letting DangerJS auto-discover files from the workspace.\r\n\r\n   For example, configure the action to execute a trusted path only, rather than relying on default discovery order.\r\n\r\n6. Remove or restrict higher-priority attacker-controlled Dangerfile names before invoking DangerJS.\r\n\r\n   Examples:\r\n\r\n```bash\r\nrm -f dangerfile.mts dangerfile.mjs Dangerfile.mts Dangerfile.mjs\r\n```\r\n\r\n7. Avoid exposing `GITHUB_TOKEN` to the same process that loads or executes pull request-controlled files.\r\n\r\n8. Reduce permissions. Grant `pull-requests: write` only to a final trusted step that does not execute PR-controlled code.\r\n\r\n9. Add explicit fork/origin checks if the workflow must run in a privileged context.\r\n\r\n### Notes\r\n\r\nThe current workflow appears unchanged with respect to the vulnerable chain:\r\n\r\n```text\r\npull_request_target\r\n  -> checkout PR head SHA\r\n  -> run shared DangerJS action\r\n  -> GITHUB_TOKEN exposed to the action\r\n  -> pull-requests: write\r\n```\r\n\r\nThe safest remediation is to ensure that untrusted PR-controlled files are never executed in the same context as a write-capable token.\r\n\r\n",
+ "ghsa_id": "GHSA-rhcj-7qrh-rrwh",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-rhcj-7qrh-rrwh",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-rhcj-7qrh-rrwh"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-06-02T15:26:21Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Pwn Request in DangerJS workflow via PR head checkout and Dangerfile priority hijacking",
+ "updated_at": "2026-06-02T15:26:21Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-rhcj-7qrh-rrwh",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "actions",
+    "name": "espressif/arduino-esp32"
+   },
+   "patched_versions": "30e42777900b55dfa8db39b1bddf3a6e7fa1e67f",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "e6858ea1279d3f32cf21e911ccca37bc013bb6c8"
+  }
+ ],
+ "withdrawn_at": null
+}

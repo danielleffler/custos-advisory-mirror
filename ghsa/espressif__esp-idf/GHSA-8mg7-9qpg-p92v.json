@@ -1,0 +1,123 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2025-64342",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-754"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-754",
+   "name": "Improper Check for Unusual or Exceptional Conditions"
+  }
+ ],
+ "description": "## Description\r\n \r\nWhen the ESP32 is in advertising mode, if it receives a connection request containing an invalid Access Address (AA) of `0x00000000` or `0xFFFFFFFF`, advertising may stop unexpectedly. In this case, the controller may incorrectly report a connection event to the host, which can cause the application layer to assume that the device has successfully established a connection.\r\n \r\n## Impact\r\n \r\nIn affected ESP32 software versions, the controller does not correctly handle invalid connection requests with `AA = 0x00000000` or `0xFFFFFFFF`:\r\n \r\n- Advertising is stopped unexpectedly.\r\n- A connection event is incorrectly reported to the host.\r\n- The invalid AA is later detected and ignored, but no error or disconnection event is propagated to the application layer.\r\n \r\nAs a result, the application layer may continue to believe that the device is connected, even though no valid connection exists. This issue affects only the ESP32 series. Other Espressif chip families, including ESP32-C, ESP32-S, and ESP32-H, are not affected.\r\n \r\n## Resolution\r\n \r\nAccording to the Bluetooth LE specification (Core Specification Vol 6, Part B), the Access Addresses `0x00000000` and `0xFFFFFFFF` are explicitly defined as invalid. Any device that uses these values to transmit packets or initiate a connection is non-compliant with the Bluetooth LE specification.\r\n \r\nWith this fix, when the ESP32 is advertising and receives a connection request using an Access Address of `0x00000000` or `0xFFFFFFFF`, The request is ignored in accordance with the Bluetooth LE specification:\r\n \r\n- Advertising continues without interruption.\r\n- No invalid connection is established.\r\n- Application layer behavior remains consistent with protocol expectations.\r\n \r\n## Fix Commit Records\r\n \r\nThe following commits resolve this issue:\r\n \r\n| Branch | Commit | \r\n|-------------|-------------|\r\n| master |  <[8ec54102](https://github.com/espressif/esp-idf/commit/8ec541023684d33b498fa21c5b4724bce748aa7b)>          |\r\n| release/v5.5 | <[3b95b507](https://github.com/espressif/esp-idf/commit/3b95b50703cd3301a370cffaa1cc299b1941fe2a)>    |\r\n| release/v5.4 | <[309f031d](https://github.com/espressif/esp-idf/commit/309f031dd6b04de30c926a256508c65b0df95dfa)>   | \r\n| release/v5.3 | <[e3d70429](https://github.com/espressif/esp-idf/commit/e3d70429566ece1ef593d36aa4ebd320e0c95925)>  |\r\n| release/v5.2 | <[bf667619](https://github.com/espressif/esp-idf/commit/bf66761962579f73aea682d1154b9c99b9d3d7dc)>  | \r\n| release/v5.1 | <[75967b57](https://github.com/espressif/esp-idf/commit/75967b578563ea7876dc215251cbb6d64bc9d768)> | \r\n\r\n## Credits\r\nWe would like to thank Dominik Schreiber from SBA Research for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-8mg7-9qpg-p92v",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-8mg7-9qpg-p92v",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-8mg7-9qpg-p92v"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-64342"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-11-17T11:35:56Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "ESP32 Bluetooth Controller Invalid Access Address Vulnerability",
+ "updated_at": "2025-11-17T11:35:56Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-8mg7-9qpg-p92v",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.3",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.2"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

@@ -1,0 +1,14 @@
+# The mirror's breadth: one canonical repository URL per line, lowercase.
+# This list bounds what the sync fetches; the SERVER-side scope file
+# (custos-server services/publish/advisory-scope-osv.json) bounds what a
+# pin extracts, and its converter refuses any scope entry absent here --
+# a repo never synced must never become a silent miss.
+# danielleffler/custos-sdk is DELIBERATELY absent: it is a private
+# repository, where the repository-advisories feature does not exist
+# (the API 404s) and OSV carries nothing -- mirroring it would let a
+# snapshot claim "looked up" for a component whose advisories cannot
+# appear in these sources. Add it when that changes.
+https://github.com/espressif/arduino-esp32
+https://github.com/espressif/esp-idf
+https://github.com/mbed-tls/mbedtls
+https://github.com/pioarduino/platform-espressif32

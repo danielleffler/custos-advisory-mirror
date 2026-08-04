@@ -1,0 +1,145 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "xiaobye-ctf",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/60853091?v=4",
+    "events_url": "https://api.github.com/users/xiaobye-ctf/events{/privacy}",
+    "followers_url": "https://api.github.com/users/xiaobye-ctf/followers",
+    "following_url": "https://api.github.com/users/xiaobye-ctf/following{/other_user}",
+    "gists_url": "https://api.github.com/users/xiaobye-ctf/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/xiaobye-ctf",
+    "id": 60853091,
+    "login": "xiaobye-ctf",
+    "node_id": "MDQ6VXNlcjYwODUzMDkx",
+    "organizations_url": "https://api.github.com/users/xiaobye-ctf/orgs",
+    "received_events_url": "https://api.github.com/users/xiaobye-ctf/received_events",
+    "repos_url": "https://api.github.com/users/xiaobye-ctf/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/xiaobye-ctf/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/xiaobye-ctf/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/xiaobye-ctf",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2025-52471",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-191"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-191",
+   "name": "Integer Underflow (Wrap or Wraparound)"
+  }
+ ],
+ "description": "### Software component\r\n\r\n- **Component:** [ESP Wi-Fi (esp_wifi)](https://github.com/espressif/esp-idf/tree/master/components/esp_wifi)\r\n- **Protocol:** ESP-NOW\r\n- **Functionality:** Packet reception logic\r\n\r\n### Impact\r\n\r\nAn **integer underflow vulnerability** has been identified in the ESP-NOW protocol implementation within the ESP Wi-Fi component of the **ESP-IDF framework**. This issue stems from insufficient validation of user-supplied data length in the packet receive function. Under certain conditions, this may lead to **out-of-bounds memory access** and may allow **arbitrary memory write operations**. On systems without a memory protection scheme, this behavior could potentially be used to achieve remote code execution (RCE) on the target device.\r\n\r\n### Patches\r\nTo address the aforementioned issues, ESP-NOW has added more comprehensive validation logic on user-supplied data length during packet reception to prevent integer underflow caused by negative value calculations.\r\n\r\nPatched versions of ESP-IDF Framework are listed below:\r\n\r\n| Branch | Commit          |\r\n| ------- | ------------------ |\r\n| master  |  <[edc227c](https://github.com/espressif/esp-idf/commit/edc227c5eaeced999b5212943a9434379f8aad80)> |\r\n| release/v5.5  | <[b1a379d](https://github.com/espressif/esp-idf/commit/b1a379d57430d265a53aca13d59ddfbf2e7ac409)>\r\n| release/v5.4  | <[d4dafbd](https://github.com/espressif/esp-idf/commit/d4dafbdc3572387cd4f9a62b776580bc4ac3bde7)>  |\r\n| release/v5.3   | <[d6ec5a5](https://github.com/espressif/esp-idf/commit/d6ec5a52255b17c1d6ef379e89f9de2c379042f8)> |\r\n| release/v5.2  |  <[df7757d](https://github.com/espressif/esp-idf/commit/df7757d8279871fa7a2f42ef3962c6c1ec88b8a2)> |\r\n| release/v5.1  | <[c5fc819](https://github.com/espressif/esp-idf/commit/c5fc81917805f99e687c81cc56b68dc5df7ef8b5)>  |\r\n\r\n### Workarounds\r\n\r\nThe ESP-IDF Wi-Fi library has been updated to include more robust length checks for received ESP-NOW data payloads. We recommend upgrading your ESP-IDF baseline to benefit from this fix.\r\n\r\n- For **ESP-IDF v5.3 and earlier**, if upgrading is not feasible, a workaround can be applied by validating that the `data_len` parameter received in the RX callback (registered via `esp_now_register_recv_cb()`) is a **positive value before** further processing.\r\n- For **ESP-IDF v5.4 and later**, no application-level workaround is available. Users are advised to upgrade to a patched version of ESP-IDF to take advantage of the built-in mitigation.\r\n\r\n### Credits\r\nWe would like to thank Xiaobye (@xiaobye_tw) of DEVCORE Research Team for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-hqhh-cp47-fv5g",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-hqhh-cp47-fv5g",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-hqhh-cp47-fv5g"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-52471"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-06-24T04:35:46Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "ESP-NOW Integer Underflow Vulnerability Advisory",
+ "updated_at": "2025-06-24T04:35:46Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-hqhh-cp47-fv5g",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP-NOW (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP-NOW (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP-NOW (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.6 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP-NOW (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

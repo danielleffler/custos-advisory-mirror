@@ -1,0 +1,123 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2026-25532",
+ "cvss": {
+  "score": 6.3,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 6.3,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-191"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-191",
+   "name": "Integer Underflow (Wrap or Wraparound)"
+  }
+ ],
+ "description": "# Issue Description\r\n A vulnerability exists in the WPS (Wi-Fi Protected Setup) Enrollee implementation where malformed EAP-WSC packets with truncated payloads can cause integer underflow during fragment length calculation. When processing EAP-Expanded (WSC) messages, the code computes `frag_len` by subtracting header sizes from the total packet length. If an attacker sends a packet where the EAP Length field covers only the header and flags but omits the expected payload (such as the 2-byte Message Length field when `WPS_MSG_FLAG_LEN` is set), `frag_len` becomes negative. This negative value is then implicitly cast to `size_t` when passed to `wpabuf_put_data()`, resulting in a very large unsigned value.\r\n \r\n# Impact\r\nOut-of-Bounds Write: The oversized length causes `wpabuf_put_data()` to perform a massive memory copy, leading to heap buffer overflow and memory corruption. This can result in device crash or potentially arbitrary code execution.\r\nDenial of Service: In the non-fragmented code path, a negative `tlen` value cast to size_t triggers an extremely large memory allocation via `wpabuf_alloc_copy()`, causing memory exhaustion and device reset.\r\n\r\n# Prerequisites\r\nThe attack requires the victim device to initiate WPS pairing (PBC or PIN mode), and the attacker must be within Wi-Fi range to act as a rogue Access Point.\r\n\r\n# Resolution\r\nAdded input validation to verify packet lengths before computing `frag_len` and `tlen`, ensuring these values are non-negative before use in memory operations. The fix rejects malformed packets early in the processing flow, preventing the integer underflow condition.\r\n \r\n# Fix Commit Records\r\n \r\n| Branch       | Commits       |\r\n|--------------|---------------|\r\n| master       |   https://github.com/espressif/esp-idf/commit/b88befde6b5addcdd8d7373ce55c8052dea1e855   |\r\n| release/v6.0 |   https://github.com/espressif/esp-idf/commit/de28801e8ea6a736b6f0db6fc0c682739363bb41   |\r\n| release/v5.5 |   https://github.com/espressif/esp-idf/commit/b209fae993d795255827ce6b2b0d6942a377f5d4   |\r\n| release/v5.4 | https://github.com/espressif/esp-idf/commit/73a587d42a57ece1962b6a4c530b574600650f63   |\r\n| release/v5.3 |  https://github.com/espressif/esp-idf/commit/6f6766f917bc940ffbcc97eac4765a6ab15d5f79  |\r\n| release/v5.2 |  https://github.com/espressif/esp-idf/commit/60f992a26de17bb5406f2149a2f8282dd7ad1c59  |\r\n| release/v5.1 |  https://github.com/espressif/esp-idf/commit/cad36beb4cde27abcf316cd90d8d8dddbc6f213a  |\r\n\r\n \r\n# Credits\r\n \r\nWe would like to thank Pavel Kohout from [Aisle Research](www.aisle.com) for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-m2h2-683f-9mw7",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-m2h2-683f-9mw7",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-m2h2-683f-9mw7"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-25532"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-02-04T02:22:47Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/85924095?v=4",
+  "events_url": "https://api.github.com/users/ESP-Mars/events{/privacy}",
+  "followers_url": "https://api.github.com/users/ESP-Mars/followers",
+  "following_url": "https://api.github.com/users/ESP-Mars/following{/other_user}",
+  "gists_url": "https://api.github.com/users/ESP-Mars/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/ESP-Mars",
+  "id": 85924095,
+  "login": "ESP-Mars",
+  "node_id": "MDQ6VXNlcjg1OTI0MDk1",
+  "organizations_url": "https://api.github.com/users/ESP-Mars/orgs",
+  "received_events_url": "https://api.github.com/users/ESP-Mars/received_events",
+  "repos_url": "https://api.github.com/users/ESP-Mars/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/ESP-Mars/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/ESP-Mars/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/ESP-Mars",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "WPS Enrollee Fragment Integer Underflow Vulnerability",
+ "updated_at": "2026-02-04T02:22:47Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-m2h2-683f-9mw7",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "wpa_supplicant (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.3 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.2"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "wpa_supplicant (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "wpa_supplicant (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "wpa_supplicant (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "wpa_supplicant (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

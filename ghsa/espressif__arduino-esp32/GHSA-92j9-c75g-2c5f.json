@@ -1,0 +1,118 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Amemoyoi",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/193629772?v=4",
+    "events_url": "https://api.github.com/users/Amemoyoi/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Amemoyoi/followers",
+    "following_url": "https://api.github.com/users/Amemoyoi/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Amemoyoi/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Amemoyoi",
+    "id": 193629772,
+    "login": "Amemoyoi",
+    "node_id": "U_kgDOC4qOTA",
+    "organizations_url": "https://api.github.com/users/Amemoyoi/orgs",
+    "received_events_url": "https://api.github.com/users/Amemoyoi/received_events",
+    "repos_url": "https://api.github.com/users/Amemoyoi/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Amemoyoi/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Amemoyoi/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Amemoyoi",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-41429",
+ "cvss": {
+  "score": 8.8,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 8.8,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-121"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-121",
+   "name": "Stack-based Buffer Overflow"
+  }
+ ],
+ "description": "## Summary\r\n\r\nI identified a remotely reachable memory corruption issue in the NBNS packet handling path. When NetBIOS is enabled by calling `NBNS.begin(...)`, the device listens on UDP port 137 and processes untrusted NBNS requests from the local network.  \r\nThe request parser trusts the attacker-controlled `name_len` field without enforcing a bound consistent with the fixed-size destination buffers used later in the flow.\r\n\r\n## Affected component\r\n\r\n- Repository: `espressif/arduino-esp32`\r\n- Component: `libraries/NetBIOS`\r\n- File: `libraries/NetBIOS/src/NetBIOS.cpp`\r\n\r\n## Root cause\r\n\r\nIn `NetBIOS::_onPacket()`:\r\n\r\n- The packet is cast directly to `nbns_question_t`\r\n- `question->name_len` is treated as trusted input\r\n- `_getnbname(&question->name[0], name, question->name_len)` is called without validating that `name_len` is safe for the available input buffer\r\n- Later, `memcpy(&nbnsa.name[0], &question->name[0], question->name_len + 1)` copies attacker-controlled length into a fixed 33-byte buffer\r\n\r\nRelevant locations:\r\n\r\n- `libraries/NetBIOS/src/NetBIOS.cpp:80`\r\n- `libraries/NetBIOS/src/NetBIOS.cpp:91`\r\n\r\n## Impact\r\n\r\nA device with NBNS enabled can be targeted by an unauthenticated attacker on the adjacent network by sending a crafted UDP/137 packet. At minimum, this is a remotely reachable memory corruption issue with a credible denial-of-service impact.  \r\nDepending on target build, stack layout, compiler behavior, and runtime protections, code execution may be possible, but I am not claiming RCE at this time.\r\n\r\nMy current assessment is:\r\n\r\n- Attack vector: adjacent network\r\n- Privileges required: none\r\n- User interaction: none\r\n- Primary impact: memory corruption leading to crash/reset\r\n- Secondary impact: possible control-flow impact depending on target conditions\r\n\r\n## Reproduction status\r\n\r\nI validated the issue with local AddressSanitizer repro harnesses derived from the vulnerable logic.\r\n\r\n1. Out-of-bounds read in `_getnbname()` via oversized `name_len`\r\n2. Stack-buffer-overflow in the `memcpy()` path after satisfying the name comparison branch\r\n\r\nI can provide the exact repro code and ASan output on request, but I have not published the issue or opened a public ticket.\r\n\r\n## Exposure conditions\r\n\r\nThis issue is reachable only when the application enables NetBIOS by calling `NBNS.begin(...)`. In that case, the code listens on UDP port 137 and accepts NBNS requests from the local network without authentication.\r\n\r\n## Suggested remediation\r\n\r\nAt minimum, I recommend:\r\n\r\n- Rejecting any packet where `name_len` exceeds the protocol-expected encoded hostname size\r\n- Verifying that the claimed length fits within the received packet before dereferencing or decoding\r\n- Enforcing destination buffer bounds before copying into `name` / `nbnsa.name`\r\n- Avoiding direct trust in packed network structs for variable-length fields\r\n\r\n## PoC / Reproduction Material\r\n\r\nI have attached four files to support validation of this issue:\r\n\r\n1. `netbios_read_repro.c`  \r\n   Minimal harness reproducing the out-of-bounds read in `_getnbname()` when an oversized attacker-controlled `name_len` is processed.\r\n\r\n2. `netbios_write_repro.c`  \r\n   Minimal harness reproducing the stack-buffer-overflow in the `memcpy()` path after satisfying the name comparison branch used by the vulnerable code path.\r\n\r\n3. `netbios_read_write_repro`  \r\n   AddressSanitizer output showing the resulting stack-buffer-overflow read & write triggered by the write-side harness.\r\n\r\nThese harnesses are not intended to emulate the full ESP runtime. They are minimal reproductions of the vulnerable parsing and copy logic extracted from the affected implementation, used to demonstrate that attacker-controlled `name_len` can  \r\nlead to memory-unsafe behavior in both the decode path and the response construction path.\r\n\r\nThe two harnesses correspond to the following vulnerable operations in `libraries/NetBIOS/src/NetBIOS.cpp`:\r\n\r\n- Read-side issue: `_getnbname(&question->name[0], name, question->name_len);`\r\n- Write-side issue: `memcpy(&nbnsa.name[0], &question->name[0], question->name_len + 1);`",
+ "ghsa_id": "GHSA-92j9-c75g-2c5f",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-92j9-c75g-2c5f",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-92j9-c75g-2c5f"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-41429"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-04-16T08:56:49Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/12663778?v=4",
+  "events_url": "https://api.github.com/users/me-no-dev/events{/privacy}",
+  "followers_url": "https://api.github.com/users/me-no-dev/followers",
+  "following_url": "https://api.github.com/users/me-no-dev/following{/other_user}",
+  "gists_url": "https://api.github.com/users/me-no-dev/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/me-no-dev",
+  "id": 12663778,
+  "login": "me-no-dev",
+  "node_id": "MDQ6VXNlcjEyNjYzNzc4",
+  "organizations_url": "https://api.github.com/users/me-no-dev/orgs",
+  "received_events_url": "https://api.github.com/users/me-no-dev/received_events",
+  "repos_url": "https://api.github.com/users/me-no-dev/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/me-no-dev/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/me-no-dev/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/me-no-dev",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Improper validation of NBNS name_len in arduino-esp32 NetBIOS leads to memory corruption",
+ "updated_at": "2026-04-20T18:12:29Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-92j9-c75g-2c5f",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "espressif/arduino-esp32"
+   },
+   "patched_versions": "3.3.8",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "< 3.3.8"
+  }
+ ],
+ "withdrawn_at": null
+}

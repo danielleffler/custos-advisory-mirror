@@ -1,0 +1,143 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "oxqnd",
+   "type": "reporter"
+  },
+  {
+   "login": "lucasssvaz",
+   "type": "remediation_developer"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/122880412?v=4",
+    "events_url": "https://api.github.com/users/oxqnd/events{/privacy}",
+    "followers_url": "https://api.github.com/users/oxqnd/followers",
+    "following_url": "https://api.github.com/users/oxqnd/following{/other_user}",
+    "gists_url": "https://api.github.com/users/oxqnd/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/oxqnd",
+    "id": 122880412,
+    "login": "oxqnd",
+    "node_id": "U_kgDOB1MBnA",
+    "organizations_url": "https://api.github.com/users/oxqnd/orgs",
+    "received_events_url": "https://api.github.com/users/oxqnd/received_events",
+    "repos_url": "https://api.github.com/users/oxqnd/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/oxqnd/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/oxqnd/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/oxqnd",
+    "user_view_type": "public"
+   }
+  },
+  {
+   "state": "accepted",
+   "type": "remediation_developer",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+    "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+    "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+    "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/lucasssvaz",
+    "id": 32426024,
+    "login": "lucasssvaz",
+    "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+    "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+    "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+    "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/lucasssvaz",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": null,
+ "cvss": {
+  "score": 8.8,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 8.8,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-306"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-306",
+   "name": "Missing Authentication for Critical Function"
+  }
+ ],
+ "description": "**Summary:**\r\nThe official example `libraries/Update/examples/HTTP_Server_AES_OTA_Update/HTTP_Server_AES_OTA_Update.ino` starts an ESP32 access point and exposes a firmware update endpoint at `/update` without authentication. An attacker who can join the device AP can access the update page and upload arbitrary firmware, which is then written to flash and executed after reboot, resulting in remote code execution (RCE).\r\n\r\nThis appears to be an omitted OTA example after the repository fixed related OTA update vulnerabilities in `OTAWebUpdater.ino`, `WebUpdate.ino`, and `HTTPUpdateServer.h` in commit `f4fdecc60c465384e465a4b1d2bd1eac8f67912e` (`fix(csrf): Fix SCRF vulnerability in OTA examples and libraries (#11530)`), but did not update `HTTP_Server_AES_OTA_Update.ino`.\r\n\r\n**Impacted Source File:**\r\n- [`libraries/Update/examples/HTTP_Server_AES_OTA_Update/HTTP_Server_AES_OTA_Update.ino`](https://github.com/espressif/arduino-esp32/blob/1a8d72ddd4ae682f296c236f92fff57929c8ad06/libraries/Update/examples/HTTP_Server_AES_OTA_Update/HTTP_Server_AES_OTA_Update.ino)\r\n\r\n**Vulnerability Details:**\r\n- The example exposes the update page at `/update` and returns the upload form without any authentication checks:\r\n  - GET handler: lines 122-124\r\n- The same endpoint accepts POST uploads and directly writes attacker-controlled bytes via `Update.begin`, `Update.write`, and `Update.end`:\r\n  - POST handler registration: lines 127-178\r\n  - Flash write start: lines 145-156\r\n  - Flash write body: lines 164-168\r\n  - Flash finalize and reboot: lines 169-175\r\n- The example enables AP mode by default with `#define WIFI_MODE_AP`, starts a captive DNS responder, and prints the update URL to the serial console:\r\n  - AP startup: lines 189-195\r\n  - Server startup and banner: lines 222-226\r\n\r\nThere is no authentication gate, CSRF protection, or equivalent trust boundary before the uploaded firmware is processed.\r\n\r\n**Attack Scenario:**\r\n1. A device is flashed with the official `HTTP_Server_AES_OTA_Update` example.\r\n2. The device boots in AP mode and exposes an update page at `http://192.168.4.1/update`.\r\n3. An attacker within radio range joins the AP.\r\n4. The attacker requests `/update` and receives the firmware upload form without authentication.\r\n5. The attacker uploads a firmware image to the `firmware` field.\r\n6. The device writes the uploaded image to flash and reboots into attacker-controlled code.\r\n\r\n**Impact:**\r\n- Unauthenticated firmware upload\r\n- Remote code execution on the ESP32 device\r\n- Full compromise of device integrity and behavior\r\n\r\n**Hardware Reproduction:**\r\nThis issue was reproduced on real ESP32 hardware on March 10, 2026.\r\n\r\n1. The example was compiled and flashed to an ESP32.\r\n2. Serial output confirmed that the official example started an AP and enabled the update endpoint:\r\n\r\n```text\r\nBooting Sketch...\r\nWifi AP started, IP address: 192.168.4.1\r\nUpload Decryption Ready\r\nHTTPUpdateServer ready with Captive DNS!\r\nOpen http://anyname.xyz/update in your browser\r\n```\r\n\r\n3. From a separate client connected to the ESP32 AP, the update page was accessible without authentication:\r\n\r\n```bash\r\ncurl -i http://192.168.4.1/update\r\n```\r\n\r\nObserved response:\r\n\r\n```http\r\nHTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 956\r\nConnection: close\r\n```\r\n\r\nThe response body contained the firmware upload form.\r\n\r\n4. A firmware image upload succeeded without authentication:\r\n\r\n```bash\r\ncurl -F \"firmware=@C:\\HTTP_Server_AES_OTA_Update.ino.bin\" http://192.168.4.1/update\r\n```\r\n\r\nObserved response:\r\n\r\n```html\r\n<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...\r\n```\r\n\r\nThis demonstrates that the example allows unauthenticated OTA upload and execution of uploaded firmware.\r\n\r\n**Proof of Concept (PoC):**\r\nCheck unauthenticated access to the update page:\r\n\r\n```bash\r\ncurl -i http://192.168.4.1/update\r\n```\r\n\r\nUpload firmware without authentication:\r\n\r\n```bash\r\ncurl -F \"firmware=@HTTP_Server_AES_OTA_Update.ino.bin\" http://192.168.4.1/update\r\n```\r\n\r\n**Recommended Remediation:**\r\n- Require authentication before serving or accepting any OTA upload in this example.\r\n- Add CSRF protection consistent with the July 2025 OTA fixes.\r\n- Avoid shipping official OTA examples that allow unauthenticated firmware writes by default.\r\n- Document that firmware update examples must not be exposed without authentication and request-origin validation.\r\n\r\n**Related Previously Accepted Issue:**\r\n- `CVE-2025-53540` / `GHSA-9vfw-wx65-c872`\r\n\r\n**References:**\r\n- Previous accepted report: `GHSA-9vfw-wx65-c872`\r\n- Previous fix commit: `f4fdecc60c465384e465a4b1d2bd1eac8f67912e`\r\n",
+ "ghsa_id": "GHSA-v7jh-c872-6jmp",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-v7jh-c872-6jmp",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-v7jh-c872-6jmp"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-03-17T04:36:09Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Unauthenticated Firmware Upload in Official `HTTP_Server_AES_OTA_Update` Example Allows Remote Code Execution",
+ "updated_at": "2026-03-17T04:36:09Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-v7jh-c872-6jmp",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "arduino",
+    "name": "ESP32 Arduino"
+   },
+   "patched_versions": "1d12a05379517f4a3738f215b8e45bfb59bc04fa",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "3.3.7"
+  }
+ ],
+ "withdrawn_at": null
+}

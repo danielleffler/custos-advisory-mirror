@@ -1,0 +1,150 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "HCS921",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/239920225?v=4",
+    "events_url": "https://api.github.com/users/HCS921/events{/privacy}",
+    "followers_url": "https://api.github.com/users/HCS921/followers",
+    "following_url": "https://api.github.com/users/HCS921/following{/other_user}",
+    "gists_url": "https://api.github.com/users/HCS921/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/HCS921",
+    "id": 239920225,
+    "login": "HCS921",
+    "node_id": "U_kgDODkzkYQ",
+    "organizations_url": "https://api.github.com/users/HCS921/orgs",
+    "received_events_url": "https://api.github.com/users/HCS921/received_events",
+    "repos_url": "https://api.github.com/users/HCS921/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/HCS921/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/HCS921/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/HCS921",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-55687",
+ "cvss": {
+  "score": 7.5,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.5,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-121",
+  "CWE-787"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-121",
+   "name": "Stack-based Buffer Overflow"
+  },
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  }
+ ],
+ "description": "## Description\r\n\r\nAn out-of-bounds write exists in the ESP-IDF JPEG decoder header parser (`jpeg_parse_dqt_marker()` in `components/esp_driver_jpeg/jpeg_parse_marker.c`). When parsing a Define Quantization Table (DQT) segment, the parser reads the `PqTq` byte and extracts the quantization-table destination identifier `Tq` from the low nibble:\r\n\r\n```\r\nn = jpeg_get_bytes(header_info, 1);\r\nn &= 0x0F;                                  // Tq, attacker-controlled, unchecked\r\nheader_info->qt_tbl[n][zigzag_arr[i]] = temp;\r\n```\r\n\r\n`qt_tbl` is statically declared as `uint32_t[4][64]`, so valid first-dimension indices are `0..3`. Because `Tq` is taken directly from untrusted input without a range check, a `Tq` value of 4 or greater causes a write past the end of the array into adjacent stack memory.\r\n\r\n## Impact\r\n\r\nAny code path that feeds attacker-controlled JPEG data into the hardware decoder is exposed \u2014 for example image data received over the network (HTTP / MJPEG streams) or decoded from removable media (SD, USB).\r\n\r\nThe primary, reliably demonstrated consequence is **denial of service**: a single malformed JPEG triggers a `Stack smashing protect failure` panic on ESP32-family parts that ship the JPEG hardware decoder. The crash is deterministic on ESP32-P4. Because the attacker controls the JPEG input, the crash can be re-triggered at will, resulting in a repeatable denial of service.\r\n\r\nBecause the write is attacker-controlled in content and deterministic in offset, it also constitutes stack memory corruption. Depending on build hardening, this **may be leveraged toward code execution** \u2014 for instance on builds compiled without `-fstack-protector-strong`, where the affected frame is not covered by a stack canary. Exploitation beyond DoS has not been demonstrated and is bounded by the target's compiler hardening configuration.\r\n\r\n## Resolution\r\n\r\n`jpeg_parse_dqt_marker()` now validates the `Tq` nibble against the size of the destination quantization-table array before any write. A `Tq` value outside `0..3` is rejected through the normal JPEG marker error path (the decode session aborts with an `ESP_ERR_INVALID_ARG` JPEG error code) before any out-of-bounds access can occur. The symmetric `Th` field in the DHT marker parser was audited at the same time and the same bound check was added there as a defense-in-depth measure.\r\n\r\n## Fix Commit Records\r\n\r\n| Branch | Commits |\r\n| --- | --- |\r\n| master | [6ffaffe](https://github.com/espressif/esp-idf/commit/6ffafe8e93142ef8ffe51a6311d4abfc0f10fe77) |\r\n| release/v6.0 | [f2df45b](https://github.com/espressif/esp-idf/commit/f2df45bcedef11354e83c31a9718d680a68422c4) |\r\n| release/v5.5 | [82c5c2d](https://github.com/espressif/esp-idf/commit/82c5c2dad45313786fb7e973059bc9094d95c3b2) |\r\n| release/v5.4 | [7ccfc00](https://github.com/espressif/esp-idf/commit/7ccfc00f39faf1b7e5919f45b56fe44ba699d7c1) |\r\n| release/v5.3 | [303c013](https://github.com/espressif/esp-idf/commit/303c01305acb8ae5c4eb24a1786300681b4822a4) |\r\n\r\n## Workarounds\r\n\r\nNone \u2014 upgrade to a patched release. As an interim mitigation, avoid passing untrusted or unvalidated JPEG data to the hardware decoder. The fix is included in v6.0.2 / v5.5.5 / v5.4.5 / v5.3.6 (yet to be released).\r\n\r\n## Credits\r\n\r\nWe would like to thank Hayden Steele for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-v6r2-f6p2-88cj",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-v6r2-f6p2-88cj",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-v6r2-f6p2-88cj"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-55687"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-06-22T16:00:51Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Stack-Based Out-of-Bounds Write in JPEG Decoder DQT Marker Parsing",
+ "updated_at": "2026-06-22T16:00:51Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-v6r2-f6p2-88cj",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_driver_jpeg (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.2 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_driver_jpeg (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_driver_jpeg (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_driver_jpeg (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.6 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.5"
+  }
+ ],
+ "withdrawn_at": null
+}

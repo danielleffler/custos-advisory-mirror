@@ -1,0 +1,123 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2026-25507",
+ "cvss": {
+  "score": 6.3,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 6.3,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-416"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-416",
+   "name": "Use After Free"
+  }
+ ],
+ "description": "## Description\r\n\r\nA use-after-free vulnerability was reported in the BLE provisioning transport (`protocomm_ble`) layer. The issue can be triggered by a remote BLE client while the device is in provisioning mode.\r\n\r\nThe vulnerability occurred when provisioning was stopped with `keep_ble_on = true`. In this configuration, internal `protocomm_ble` state and GATT metadata were freed while the BLE stack and GATT services remained active. Subsequent BLE read or write callbacks dereferenced freed memory, allowing a connected or newly connected client to trigger invalid memory access.\r\n\r\n## Impact\r\n\r\nA remote BLE client within radio range can exploit this vulnerability without authentication while the device is in provisioning mode, potentially causing a denial of service or heap corruption or control flow hijack in advanced cases.\r\n\r\n## Resolution\r\n\r\nThe provisioning transport was updated to avoid freeing live GATT metadata when BLE was intentionally kept enabled after provisioning, preventing use-after-free conditions in active GATT callbacks.\r\n\r\n## Fix Commit Records\r\n\r\n| Branch       | Commits       |\r\n|--------------|---------------|\r\n| master       |   47552ff4fd824caf38215468ebd2f31fb5f36d70  |\r\n| release/v6.0 |  1ff264abf2504cade46f0ce3a03f821310bcf6d7    |\r\n| release/v5.5 | 0540c85140c2c06c0cbecc8843277ea676d5c4a9  |\r\n| release/v5.4 | 894c28afe3f2f8f31ff25b64191883517dddb5cf  |\r\n| release/v5.3 | dba9a7dc01e4dab14c77d328f6a6f46369aeee63  |\r\n| release/v5.2 | cde7b7362adc15638c141c249681cbe5d23de663 |\r\n| release/v5.1 | 4c3fdcd316f780bab4ae5aa73c9626ea9fe24ac6  |\r\n\r\n\r\n## Workarounds\r\n\r\nUpgrade to a patched ESP-IDF release to ensure correct GATT metadata lifetime when BLE is kept on after provisioning.\r\n\r\nIf upgrading is not feasible, disable `keep_ble_on` so provisioning teardown stops BLE services, and avoid exposing provisioning characteristics after Wi-Fi credentials are applied.\r\n\r\n## Credits\r\n\r\nWe would like to thank Maxime Rossi Bellom and Ramtine Tofighi Shirazi from [SecMate](https://secmate.dev/) for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-h7r3-gmg9-xjmg",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-h7r3-gmg9-xjmg",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-h7r3-gmg9-xjmg"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-25507"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-02-03T04:59:17Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Use-after-free Vulnerability in BLE Provisioning",
+ "updated_at": "2026-02-03T04:59:17Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-h7r3-gmg9-xjmg",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.3 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.2"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.4 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.7 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.6"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Protocomm BLE (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

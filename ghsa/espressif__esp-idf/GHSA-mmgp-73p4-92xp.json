@@ -1,0 +1,132 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Eun0us",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/106373581?v=4",
+    "events_url": "https://api.github.com/users/Eun0us/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Eun0us/followers",
+    "following_url": "https://api.github.com/users/Eun0us/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Eun0us/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Eun0us",
+    "id": 106373581,
+    "login": "Eun0us",
+    "node_id": "U_kgDOBlchzQ",
+    "organizations_url": "https://api.github.com/users/Eun0us/orgs",
+    "received_events_url": "https://api.github.com/users/Eun0us/received_events",
+    "repos_url": "https://api.github.com/users/Eun0us/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Eun0us/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Eun0us/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Eun0us",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-45328",
+ "cvss": {
+  "score": 9.3,
+  "vector_string": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 9.3,
+   "vector_string": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-20",
+  "CWE-787"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-20",
+   "name": "Improper Input Validation"
+  },
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  }
+ ],
+ "description": "## Description\r\nThe `esp_tee` component exposes secure-service wrappers in `esp_secure_services.c` and `esp_secure_services_iram.c` that bridge calls from the user application (i.e. the REE) to TEE-protected hardware peripherals (AES, SHA, ECC, HMAC, SPI, MMU, WDT) and to the security feature like attestation, OTA updates, secure storage. \r\n\r\nSeveral wrappers validated only some of the caller-supplied pointer arguments with `esp_tee_ptr_in_ree()`, leaving output data pointers, pointers within struct contexts, and the end addresses of length-bounded buffers unchecked. Existing range checks also did not account for 32-bit address-space overflow, so a buffer wrapping past the top of memory could pass validation while still spanning TEE-resident regions. Because the underlying peripherals run in RISC-V machine mode (M-mode) with full address-space access, a caller could supply pointers into TEE-exclusive memory and cause the peripheral to write there on the caller's behalf.\r\n\r\n## Impact\r\nAn unprivileged REE application can direct ESP-TEE hardware peripherals to write attacker-influenced content into TEE-resident DRAM, breaking the REE/TEE isolation boundary. When the corrupted region contains control-flow data such as the secure service call dispatch table (`esp_secure_service_table.c`), this can be escalated to arbitrary code execution within the TEE, effectively elevating the attacker from the REE to the TEE. Other outcomes include TEE memory corruption, denial of service, and system crashes. The attacker only needs local code execution in the REE; no TEE privileges are required.\r\n\r\nThis issue affects Espressif SoCs with ESP-TEE support (ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2).\r\n\r\n## Resolution\r\nA new helper `esp_tee_buf_in_ree()` performs overflow-safe range checks on caller-supplied pointer ranges. All ESP-TEE secure-service wrappers now validate every pointer argument through this helper with `ESP_FAULT_ASSERT()` enforcement, including output pointers, pointers within struct contexts, and buffer end addresses. Pointer ranges that include any TEE-resident address are rejected before being passed to the underlying peripheral. \r\n\r\nAs an additional hardening step, the secure service call dispatch table has been relocated from TEE DRAM (R/W) to TEE IRAM (R/X under PMA), making it immutable at runtime and removing it as a corruption target.\r\n\r\n## Fix Commit Records\r\n| Branch       | Commits |\r\n|--------------|---------|\r\n| master       | [`145ba4c`](https://github.com/espressif/esp-idf/commit/145ba4c42dc8283054cfde9a1c3470db7399192f) + [`764626a`](https://github.com/espressif/esp-idf/commit/764626a1b7c85b943d207da08a2f8f7d7f3def4d) |\r\n| release/v6.0 | [`7867f4a`](https://github.com/espressif/esp-idf/commit/7867f4a57560bf9fc4a931e37ba02b7a3e9f406b) + [`440a5d1`](https://github.com/espressif/esp-idf/commit/440a5d1906502023f2a0fb0aecbdf0602d14acbf) |\r\n| release/v5.5 | [`eebabaf`](https://github.com/espressif/esp-idf/commit/eebabaff2fdc273b1530fe66e55fb3bcd181dfd6) + [`afd14ab`](https://github.com/espressif/esp-idf/commit/afd14ab113acd0ca369965404c99ac42e74d4fcd) |\r\n\r\n## Workarounds\r\nThere is no runtime workaround for this issue. Users are kindly advised to either update to a release that carries the fix or to cherry-pick the commits listed in the **Fix Commit Records** table above onto their downstream branch.\r\n\r\n## Credits\r\nWe would like to thank Eun0us / Espilon Worker for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-mmgp-73p4-92xp",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-mmgp-73p4-92xp",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-mmgp-73p4-92xp"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-45328"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-05-13T05:15:30Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "critical",
+ "state": "published",
+ "submission": null,
+ "summary": "Out-of-Bounds Write in ESP-TEE Secure Service Wrappers",
+ "updated_at": "2026-05-13T05:15:30Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-mmgp-73p4-92xp",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  }
+ ],
+ "withdrawn_at": null
+}

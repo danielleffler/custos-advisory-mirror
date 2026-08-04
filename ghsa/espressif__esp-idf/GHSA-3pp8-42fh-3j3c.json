@@ -1,0 +1,147 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Eun0us",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/106373581?v=4",
+    "events_url": "https://api.github.com/users/Eun0us/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Eun0us/followers",
+    "following_url": "https://api.github.com/users/Eun0us/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Eun0us/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Eun0us",
+    "id": 106373581,
+    "login": "Eun0us",
+    "node_id": "U_kgDOBlchzQ",
+    "organizations_url": "https://api.github.com/users/Eun0us/orgs",
+    "received_events_url": "https://api.github.com/users/Eun0us/received_events",
+    "repos_url": "https://api.github.com/users/Eun0us/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Eun0us/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Eun0us/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Eun0us",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-46532",
+ "cvss": {
+  "score": 4.6,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 4.6,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:L"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [],
+ "cwes": [],
+ "description": "### Description\r\n\r\nAn out-of-bounds read exists in the BlueDroid AVRCP vendor-command parser (`avrc_pars_vendor_cmd()` in `components/bt/host/bluedroid/stack/avrc/avrc_pars_tg.c`). Two PDU handlers \u2014 `AVRC_PDU_GET_CAPABILITIES` and `AVRC_PDU_LIST_PLAYER_APP_VALUES` \u2014 dereferenced the first payload byte before verifying that the payload length was at least one. A peer that sends a malformed AVRCP vendor command with a zero-length payload causes the parser to read one byte past the end of the received message buffer.\r\n\r\nThe out-of-bounds byte is then passed through an `AVRC_IS_VALID_*` predicate whose outcome selects one of two AVRCP status codes. The status code is included in the AVRCP error response sent back to the peer, which yields a limited oracle for whether the adjacent heap byte matches one of a small set of valid AVRCP identifiers. The byte's actual value is not transmitted; only the result of the validity check is observable.\r\n\r\n### Impact\r\n\r\nA paired BR/EDR peer with an established A2DP/AVRCP connection can issue a single malformed AVRCP vendor command and, by observing which error status the device returns, infer whether the byte adjacent to the inbound AVRCP message buffer falls within the set of valid AVRCP capability/attribute identifiers. Repeated probes against successive sessions can build up a low-bandwidth signal about heap contents adjacent to the AVRCP receive buffer. Arbitrary memory contents are not directly disclosed, and code execution has not been demonstrated.\r\n\r\nThe flaw is reachable only on builds with BlueDroid Classic Bluetooth and AVRCP target support enabled (gated by `CONFIG_BT_AVRCP_ENABLED`, which is selected automatically by A2DP). It affects all Espressif chip families that support BR/EDR. The BlueDroid A2DP/AVRCP stack registers the AVCTP L2CAP service with `BTA_SEC_AUTHENTICATE`, so the peer must hold a valid BR/EDR link key from prior pairing \u2014 a paired Bluetooth speaker, headset, or similar audio peer \u2014 in order to reach the vulnerable parser.\r\n\r\nAttacker position: **adjacent (Bluetooth radio range), authenticated peer**. Consequence: **limited information disclosure** about heap memory adjacent to the AVRCP receive buffer or device crash (DoS) in rare case due to out-of-bound memory access.\r\n\r\n### Resolution\r\n\r\n`avrc_pars_vendor_cmd()` now validates the payload length before dereferencing the payload pointer for both affected PDU handlers. Zero-length payloads are rejected through the normal AVRCP error path before the validity check is reached, so the out-of-bounds read is no longer reachable and the status-code oracle is closed.\r\n\r\n ### Fix Commit Records\r\n\r\n| Branch       | Commits       |\r\n|--------------|---------------|\r\n| master       | [60f9362f](https://github.com/espressif/esp-idf/commit/60f9362f83a05942069532f357c234cd5e5d4302) |\r\n| release/v6.0 | [8746e5f7](https://github.com/espressif/esp-idf/commit/8746e5f7e762ead84d2902edec34d84cdd701b2b) |\r\n| release/v5.5 | [b0959b5a](https://github.com/espressif/esp-idf/commit/b0959b5ab1dc60398a916c80f14b1816780c801e)|\r\n| release/v5.4 | [56053c4d](https://github.com/espressif/esp-idf/commit/56053c4d1f37955ccf296cf2f6dfd0f7ebd4fae6)|\r\n| release/v5.3 | [7c004d3](https://github.com/espressif/esp-idf/commit/7c004d3fe3022f5f0db98dd1b2d0648a3a9cfb3f)|\r\n| release/v5.2 | [c53d05ae](https://github.com/espressif/esp-idf/commit/c53d05ae526607ca5eae9ffedaf57775eec33a4f)|\r\n\r\n### Credits\r\nWe would like to thank Eun0us / Espilon Worker for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-3pp8-42fh-3j3c",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-3pp8-42fh-3j3c",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-3pp8-42fh-3j3c"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-46532"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-05-19T07:09:04Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/85924095?v=4",
+  "events_url": "https://api.github.com/users/ESP-Mars/events{/privacy}",
+  "followers_url": "https://api.github.com/users/ESP-Mars/followers",
+  "following_url": "https://api.github.com/users/ESP-Mars/following{/other_user}",
+  "gists_url": "https://api.github.com/users/ESP-Mars/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/ESP-Mars",
+  "id": 85924095,
+  "login": "ESP-Mars",
+  "node_id": "MDQ6VXNlcjg1OTI0MDk1",
+  "organizations_url": "https://api.github.com/users/ESP-Mars/orgs",
+  "received_events_url": "https://api.github.com/users/ESP-Mars/received_events",
+  "repos_url": "https://api.github.com/users/ESP-Mars/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/ESP-Mars/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/ESP-Mars/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/ESP-Mars",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Heap Out-of-Bounds Read in Bluedroid AVRCP Target Parser",
+ "updated_at": "2026-05-19T07:09:04Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-3pp8-42fh-3j3c",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "6.0.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "6.0"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.5.4",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.5.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.4.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.3.6 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.2.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.2.6"
+  }
+ ],
+ "withdrawn_at": null
+}

@@ -1,0 +1,154 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Eun0us",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/106373581?v=4",
+    "events_url": "https://api.github.com/users/Eun0us/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Eun0us/followers",
+    "following_url": "https://api.github.com/users/Eun0us/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Eun0us/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Eun0us",
+    "id": 106373581,
+    "login": "Eun0us",
+    "node_id": "U_kgDOBlchzQ",
+    "organizations_url": "https://api.github.com/users/Eun0us/orgs",
+    "received_events_url": "https://api.github.com/users/Eun0us/received_events",
+    "repos_url": "https://api.github.com/users/Eun0us/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Eun0us/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Eun0us/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Eun0us",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-45160",
+ "cvss": {
+  "score": 6.5,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 6.5,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-125"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-125",
+   "name": "Out-of-bounds Read"
+  }
+ ],
+ "description": "## Description\r\nAn out-of-bounds read flaw exists in the DHCP server option parser (`parse_options()` in `components/lwip/apps/dhcpserver/dhcpserver.c`) shipped with ESP-IDF's lwIP component. The parser walks the BOOTP/DHCP options field without validating that each option's length byte and declared payload length stay within the received packet buffer. A crafted DHCP request can cause the parser to read past the end of the options buffer into adjacent heap memory.\r\n\r\nThe issue affects the DHCP server used by ESP-IDF's SoftAP and any configuration where the device runs as a DHCP server on a local network.\r\n                                                                                       \r\n## Impact                                              \r\nAn attacker on the same Layer-2 network as a device running the ESP-IDF DHCP server (typically a station associated to the device's SoftAP) can send a single unauthenticated DHCP broadcast that triggers an out-of-bounds read of adjacent heap   memory.                                                                              \r\n                                                         \r\nThe OOB read does not return data to the attacker \u2014 the read bytes are consumed by the parser as option metadata (length, type) and never echoed in DHCP responses. The attacker-observable consequence is **denial of service**: the malformed read can crash the lwIP/DHCP server task or corrupt parser state, denying address assignment to all clients on the SoftAP.\r\n                                                               \r\nThe vulnerability is unauthenticated and pre-association to the SoftAP is the only precondition; on open or PSK-protected SoftAPs, any joined client is in position to exploit it.                                                                          \r\n                                                         \r\n## Resolution\r\nThe option parser was hardened to validate each option's bounds before dereferencing the length byte or its payload. The new invariants are:                              \r\n  \r\n  - `DHCP_OPTION_PAD` (0) is skipped explicitly.                                       \r\n  - `DHCP_OPTION_END` (255) terminates parsing.          \r\n  - The option length byte is read only after confirming it lies inside the buffer.    \r\n  - The option payload is consumed only after confirming the full declared length lies inside the buffer.                                                                   \r\n  - Per-option handlers (message type, requested IP address, etc.) now check that the declared length is large enough for the field they consume before accessing it.      \r\n                                                         \r\nThese checks ensure the parser cannot read beyond the options buffer regardless of attacker-supplied option codes or lengths.             \r\n                                                                                       \r\n  ## Fix Commit Records                                  \r\n\r\n  | Branch       | Commits              |\r\n  |--------------|-----------------------------|\r\n  | master       | [8b4b5d53](https://github.com/espressif/esp-idf/commit/8b4b5d5301815198d177974ffc24848f47748248)   |                 \r\n  | release/v6.0 | [fba5f995](https://github.com/espressif/esp-idf/commit/fba5f995436a3e3139f768b6d8f1a74d5ce1d318)  |\r\n  | release/v5.5 | [d51b1076](https://github.com/espressif/esp-idf/commit/d51b1076092487e533eadf8b48c9c8579d3a6712)  |\r\n  | release/v5.4 | [2bf4dd12](https://github.com/espressif/esp-idf/commit/2bf4dd12002dbae60a4b21abff010ecb2b8ee82b)  |\r\n  | release/v5.3 | [9f713dbc](https://github.com/espressif/esp-idf/commit/9f713dbc94982d917f2d12964b233cd9efa4aeba)  |\r\n  | release/v5.2 | [2da2db43](https://github.com/espressif/esp-idf/commit/2da2db43fd7e0bcff9e7b95f54f388296bb6f911)  |\r\n                                                                     \r\n## Workarounds                                                                       \r\nNo reliable workaround exists short of disabling the lwIP DHCP server. Devices that do not act as a DHCP server (station-only deployments) are not affected. Restricting Wi-Fi association \u2014 for example by enabling WPA2/WPA3 with a strong PSK and limiting which devices can associate \u2014 raises the bar for exploitation but does not eliminate the underlying flaw.                                   \r\n\r\nPlease consider upgrade to a release that carries the fix as highlighted above.\r\n                                                                                       \r\n## Credits                                             \r\nWe would like to thank Eun0us / Espilon Worker for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-g764-gwc3-75m5",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-g764-gwc3-75m5",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-g764-gwc3-75m5"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-45160"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-05-21T14:17:07Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/85924095?v=4",
+  "events_url": "https://api.github.com/users/ESP-Mars/events{/privacy}",
+  "followers_url": "https://api.github.com/users/ESP-Mars/followers",
+  "following_url": "https://api.github.com/users/ESP-Mars/following{/other_user}",
+  "gists_url": "https://api.github.com/users/ESP-Mars/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/ESP-Mars",
+  "id": 85924095,
+  "login": "ESP-Mars",
+  "node_id": "MDQ6VXNlcjg1OTI0MDk1",
+  "organizations_url": "https://api.github.com/users/ESP-Mars/orgs",
+  "received_events_url": "https://api.github.com/users/ESP-Mars/received_events",
+  "repos_url": "https://api.github.com/users/ESP-Mars/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/ESP-Mars/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/ESP-Mars/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/ESP-Mars",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Out-of-bounds Read in lwIP DHCP Server Option Parser",
+ "updated_at": "2026-05-21T14:17:07Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-g764-gwc3-75m5",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "lwIP DHCP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.8 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.7"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "lwIP DHCP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.6 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "lwIP DHCP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "lwIP DHCP Server (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "lwIP DHCP Server (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0.1"
+  }
+ ],
+ "withdrawn_at": null
+}

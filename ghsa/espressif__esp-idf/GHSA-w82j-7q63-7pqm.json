@@ -1,0 +1,137 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "Eun0us",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/106373581?v=4",
+    "events_url": "https://api.github.com/users/Eun0us/events{/privacy}",
+    "followers_url": "https://api.github.com/users/Eun0us/followers",
+    "following_url": "https://api.github.com/users/Eun0us/following{/other_user}",
+    "gists_url": "https://api.github.com/users/Eun0us/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/Eun0us",
+    "id": 106373581,
+    "login": "Eun0us",
+    "node_id": "U_kgDOBlchzQ",
+    "organizations_url": "https://api.github.com/users/Eun0us/orgs",
+    "received_events_url": "https://api.github.com/users/Eun0us/received_events",
+    "repos_url": "https://api.github.com/users/Eun0us/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/Eun0us/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/Eun0us/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/Eun0us",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-45329",
+ "cvss": {
+  "score": 7.1,
+  "vector_string": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.1,
+   "vector_string": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-20",
+  "CWE-125",
+  "CWE-200"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-20",
+   "name": "Improper Input Validation"
+  },
+  {
+   "cwe_id": "CWE-125",
+   "name": "Out-of-bounds Read"
+  },
+  {
+   "cwe_id": "CWE-200",
+   "name": "Exposure of Sensitive Information to an Unauthorized Actor"
+  }
+ ],
+ "description": "## Description\r\nSeveral ESP-TEE secure-service wrappers in `esp_secure_services.c` and `esp_secure_services_iram.c` validated only some of the caller-supplied pointer arguments, leaving input pointer arguments unchecked. Because the underlying TEE-protected hardware peripherals (e.g., ECC, SHA, SPI) run in RISC-V machine mode (M-mode) with full address-space access, a caller could supply pointers into TEE-exclusive memory as inputs, causing the peripheral to read TEE memory and return results derived from it to the REE. Depending on the wrapper, the result contains raw bytes from TEE memory, a computed function of TEE memory recoverable through repeated calls, or a single bit per call that forms an oracle for incremental disclosure of TEE-resident sensitive data.\r\n\r\n## Impact\r\nAn unprivileged REE application can read TEE-resident sensitive data across the REE/TEE isolation boundary. This discloses TEE code and data, including cryptographic keys and other application secrets held in the TEE. It also exposes code and data addresses and internal pointers, defeating the exploit mitigations that protect the TEE and making subsequent memory-corruption attacks far more reliable. The attacker only needs local code execution in the REE; no TEE privileges are required.\r\n\r\nThis issue affects Espressif SoCs with ESP-TEE support (ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2).\r\n\r\n## Resolution\r\nAll ESP-TEE secure-service wrappers now validate every input pointer argument through the overflow-safe `esp_tee_buf_in_ree()` helper with `ESP_FAULT_ASSERT()` enforcement, including pointers within struct contexts and buffer end addresses. Pointer ranges that include any TEE-resident address are rejected before being passed to the underlying peripheral.\r\n\r\n## Fix Commit Records\r\n| Branch       | Commits |\r\n|--------------|---------|\r\n| master       | [`145ba4c`](https://github.com/espressif/esp-idf/commit/145ba4c42dc8283054cfde9a1c3470db7399192f)|\r\n| release/v6.0 | [`7867f4a`](https://github.com/espressif/esp-idf/commit/7867f4a57560bf9fc4a931e37ba02b7a3e9f406b) |\r\n| release/v5.5 | [`eebabaf`](https://github.com/espressif/esp-idf/commit/eebabaff2fdc273b1530fe66e55fb3bcd181dfd6)|\r\n\r\n## Workarounds\r\nThere is no runtime workaround for this issue. Users are kindly advised to either update to a release that carries the fix or to cherry-pick the commit listed in the **Fix Commit Records** table above onto their downstream branch.\r\n\r\n## Credits\r\nWe would like to thank Eun0us / Espilon Worker for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-w82j-7q63-7pqm",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-w82j-7q63-7pqm",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-w82j-7q63-7pqm"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-45329"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-05-13T05:16:20Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Out-of-Bounds Read in ESP-TEE Secure Service Wrappers",
+ "updated_at": "2026-05-13T05:16:20Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-w82j-7q63-7pqm",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  }
+ ],
+ "withdrawn_at": null
+}

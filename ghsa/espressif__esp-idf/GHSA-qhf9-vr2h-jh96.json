@@ -1,0 +1,123 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2025-66409",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-125"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-125",
+   "name": "Out-of-bounds Read"
+  }
+ ],
+ "description": "## Issue Description\r\n \r\nWhen AVRCP is enabled on ESP32, receiving a malformed VENDOR DEPENDENT command from a peer device can cause the Bluetooth stack to access memory before validating the command buffer length. This may lead to an out-of-bounds read, potentially exposing unintended memory content or causing unexpected behavior.\r\n \r\n## Impact\r\n \r\nIn affected ESP32 software versions, if an attacker sends a specially crafted VENDOR DEPENDENT command with a buffer shorter than required by the AVRCP protocol, the Bluetooth stack BlueDroid may read beyond the end of the provided buffer. \r\n\r\nOut-of-bounds reads may cause undefined behavior, potentially leading to program crashes or system instability. \r\n\r\nAmong Espressif's chip families, only ESP32 devices supporting Bluetooth Classic are affected. In addition, any project using ESP-IDF Bluetooth stack BlueDroid together with a third-party Bluetooth controller may also be impacted.\r\n \r\n## Resolution\r\n \r\nThe issue has been resolved by adding length verification before processing AVRCP VENDOR DEPENDENT commands.\r\n \r\nIf the buffer length is shorter than the minimum required for the specific command, the command will now be safely rejected.\r\n \r\n## Fix Commit Records\r\n \r\n| Branch       | Commits  |\r\n|--------------|-----------|\r\n| master       | [075ed218](https://github.com/espressif/esp-idf/commit/075ed218cadb8088155521cd8a795d8a626519fb) |\r\n| release/v5.5 | [999710fc](https://github.com/espressif/esp-idf/commit/999710fccf95ae128fe51b5679d6b7c75c50d902) |\r\n| release/v5.4 | [2f788e59](https://github.com/espressif/esp-idf/commit/2f788e59ee361eee230879ae2ec9cf5c893fe372) |\r\n| release/v5.3 | [daeeba23](https://github.com/espressif/esp-idf/commit/daeeba230327176b9627b1caa94acdc54065c4b7) |\r\n| release/v5.2 | [d5db5f60](https://github.com/espressif/esp-idf/commit/d5db5f60fc1dcfdd8cd3ee898fdefaa272988ace) |\r\n| release/v5.1 | [79802912](https://github.com/espressif/esp-idf/commit/798029129a71c802cff0e75eb59f902bca8f1946) |\r\n \r\n## Credits\r\n \r\nWe would like to thank Titan Team from Singapore Management University for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-qhf9-vr2h-jh96",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-qhf9-vr2h-jh96",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-qhf9-vr2h-jh96"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-66409"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-12-02T07:32:00Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/85924095?v=4",
+  "events_url": "https://api.github.com/users/ESP-Mars/events{/privacy}",
+  "followers_url": "https://api.github.com/users/ESP-Mars/followers",
+  "following_url": "https://api.github.com/users/ESP-Mars/following{/other_user}",
+  "gists_url": "https://api.github.com/users/ESP-Mars/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/ESP-Mars",
+  "id": 85924095,
+  "login": "ESP-Mars",
+  "node_id": "MDQ6VXNlcjg1OTI0MDk1",
+  "organizations_url": "https://api.github.com/users/ESP-Mars/orgs",
+  "received_events_url": "https://api.github.com/users/ESP-Mars/received_events",
+  "repos_url": "https://api.github.com/users/ESP-Mars/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/ESP-Mars/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/ESP-Mars/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/ESP-Mars",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Out-of-Bounds Read in ESP32 Bluetooth AVRCP Command Handling",
+ "updated_at": "2025-12-02T07:32:00Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-qhf9-vr2h-jh96",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.6"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

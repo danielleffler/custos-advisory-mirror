@@ -1,0 +1,123 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2025-68474",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": 6.1,
+   "vector_string": "CVSS:4.0/AV:A/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:H/SC:L/SI:L/SA:L"
+  }
+ },
+ "cwe_ids": [
+  "CWE-787"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  }
+ ],
+ "description": "# Issue Description\r\n\r\nIn the `avrc_vendor_msg()` function of the ESP-IDF BlueDroid AVRCP stack, the allocated buffer size was validated using `AVRC_MIN_CMD_LEN` (20 bytes). However, the actual fixed header data written before the vendor payload exceeds this value.\r\n\r\nSpecifically, the fixed header includes:\r\n\r\n* BT_HDR structure: 8 bytes\r\n* AVCT_MSG_OFFSET: 15 bytes\r\n* Vendor header fields: 3 bytes\r\n* Company ID: 3 bytes\r\n\r\nThis totals 29 bytes written before `p_msg->p_vendor_data` is copied. Using the old `AVRC_MIN_CMD_LEN` could allow an out-of-bounds write if `vendor_len` approaches the buffer limit.\r\n\r\n# Impact\r\n\r\nFor commands where `vendor_len` is large, the original buffer allocation may be insufficient, causing writes beyond the allocated memory. This can lead to memory corruption, crashes, or other undefined behavior. The overflow could be larger when assertions are disabled.\r\n\r\nAffected platforms include ESP devices and other products using the BlueDroid AVRCP stack with Classic Bluetooth and AVRCP target/metadata support enabled.\r\n\r\n# Resolution\r\n\r\nThe issue is fixed by introducing a new macro that accurately reflects the minimum fixed header size:\r\n\r\n```c\r\n#define AVRC_MIN_VENDOR_CMD_LEN (BT_HDR_SIZE + AVCT_MSG_OFFSET + AVRC_VENDOR_HDR_SIZE)\r\n```\r\n\r\nBuffer allocations and length checks now use this value, and the original assert-based length check has been replaced with a runtime check to ensure safe allocation, thereby preventing any buffer overflow.\r\n\r\n# Fix Commit Records\r\n\r\n| Branch  |\tCommits |\r\n|----------|-------------|\r\n| master \t| 565fa98d |\r\n| release/v6.0 \t| 565fa98d |\r\n| release/v5.5 \t| b9ba1e29 |\r\n| release/v5.4 \t| a6c1bc5e | \r\n| release/v5.3 \t| 0b0b59f2 |\r\n| release/v5.2 \t| 8262ee80 |\r\n| release/v5.1 \t| aa0e3d75 |\r\n\r\n# Credits\r\n\r\nWe would like to thank Pavel Kohout and Stanislav Fort from Aisle Research for reporting this vulnerability and for following up on its responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-43gh-7r4f-qp57",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-43gh-7r4f-qp57",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-43gh-7r4f-qp57"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-68474"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-12-25T04:57:13Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Out-of-Bounds Write in ESP32 Bluetooth AVRCP Vendor Command Handling",
+ "updated_at": "2025-12-25T04:57:13Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-43gh-7r4f-qp57",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.6"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

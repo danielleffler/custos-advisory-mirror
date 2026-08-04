@@ -1,0 +1,123 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2025-68473",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": 6.1,
+   "vector_string": "CVSS:4.0/AV:A/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:H/SC:L/SI:L/SA:L"
+  }
+ },
+ "cwe_ids": [
+  "CWE-787"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  }
+ ],
+ "description": "# Issue Description\r\n \r\nIn the ESP-IDF Bluetooth host stack (BlueDroid), the function `bta_dm_sdp_result()` used a fixed-size array `uuid_list[32][MAX_UUID_SIZE]` to store discovered service UUIDs during the SDP (Service Discovery Protocol) process.\r\n \r\nOn modern Bluetooth devices, it is possible for the number of available services to exceed this fixed limit (32). In such cases, if more than 32 services are discovered, subsequent writes to `uuid_list` could exceed the bounds of the array, resulting in a potential out-of-bounds write condition.\r\n \r\n# Impact\r\n \r\nIn affected versions of the ESP32 Bluetooth stack, when performing SDP service discovery against a peer device that exposes more than 32 services, the Bluetooth host stack may write data beyond the allocated `uuid_list` buffer.\r\n \r\nThis could lead to memory corruption, undefined behavior, or, in rare cases, system crashes.\r\n \r\nThe issue affects all Espressif chip families using the BlueDroid Bluetooth host stack for Classic Bluetooth operations (BR/EDR mode).\r\n \r\n# Resolution\r\n \r\nThe issue has been resolved by replacing the hardcoded array size (32) with a configurable constant MAX_UUID_NUM and by adding boundary checks before writing to the `uuid_list` array.\r\n \r\nIf the number of discovered services exceeds `MAX_UUID_NUM`, the stack will now stop adding new entries and log a warning:\r\n \r\n```c\r\nAPPL_TRACE_WARNING(\"only process the first %d records\\n\", MAX_UUID_NUM);\r\n```\r\n \r\nThis ensures that no memory writes occur beyond the buffer limit.\r\n \r\n# Fix Commit Records\r\n \r\n| Branch       | Commits       |\r\n|--------------|---------------|\r\n| master       | [6ca6f422](https://github.com/espressif/esp-idf/commit/6ca6f422dafaffcb88fa56cc458ce92d96be3b2e) |\r\n| release/v6.0 | [5b318516](https://github.com/espressif/esp-idf/commit/5b3185168dae83d42aa0852689422fffd931f16c) |\r\n| release/v5.5 | [9889edd7](https://github.com/espressif/esp-idf/commit/9889edd799cf369e082df9d01adba961d64693ed)|\r\n| release/v5.4 | [3286e453](https://github.com/espressif/esp-idf/commit/3286e45349b0b5c2b1422ef7e8d088b95eef895d) |\r\n| release/v5.3 | [4d928f22](https://github.com/espressif/esp-idf/commit/4d928f2265c394d2abc85024228e920a5b26bcab)|\r\n| release/v5.2 | [ecb86d35](https://github.com/espressif/esp-idf/commit/ecb86d353640cf1375bf97db32e702ba59c551b6)|\r\n| release/v5.1 | [6453f57a](https://github.com/espressif/esp-idf/commit/6453f57a954458ad8ffd6e4bf2d9e76b73fac0f1) |\r\n \r\n# Credits\r\n \r\nWe would like to thank Luigino Camastra and Pavel Kohut from Aisle Research for reporting this vulnerability and for following up on its responsible disclosure.",
+ "ghsa_id": "GHSA-hmjj-rjvv-w8pq",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-hmjj-rjvv-w8pq",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-hmjj-rjvv-w8pq"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-68473"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-12-25T04:58:25Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Out-of-Bounds Write in ESP32 Bluetooth SDP Result Handling",
+ "updated_at": "2025-12-25T04:58:25Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-hmjj-rjvv-w8pq",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.6"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "v5.1.7 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.1.6"
+  }
+ ],
+ "withdrawn_at": null
+}

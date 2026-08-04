@@ -1,0 +1,110 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2025-65092",
+ "cvss": {
+  "score": null,
+  "vector_string": null
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": null,
+   "vector_string": null
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-125",
+  "CWE-191"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-125",
+   "name": "Out-of-bounds Read"
+  },
+  {
+   "cwe_id": "CWE-191",
+   "name": "Integer Underflow (Wrap or Wraparound)"
+  }
+ ],
+ "description": "## Issue \r\n\r\nWhen the ESP32-P4 uses its hardware JPEG decoder, the software parser lacks necessary validation checks. A specially crafted (malicious) JPEG image could exploit the parsing routine and trigger an out-of-bounds array access.\r\n \r\n \r\n## Impact\r\n \r\nDuring software-based parsing of a JPEG image header, multiple array operations are performed. For example, according to the JPEG specification, the quantization table length should not exceed 64 entries. However, the software allocates a fixed-size array of 64 elements without sufficient boundary checks. A specially crafted image containing an overlong quantization table can trigger an out-of-bounds array access, potentially causing a crash or other undefined behavior.\r\n \r\n \r\n## Resolution\r\n \r\nThe solution is to implement additional validation during JPEG header parsing. When an invalid or malformed image is detected, the decoder should return an error and abort processing to prevent out-of-bounds access.\r\n \r\n \r\n## Fix Commit Records\r\n \r\n| Branch       | Commits       |\r\n|--------------|---------------|\r\n| master       | c38a6691b9845ac6ee0d0f6713783114770cdc17      |\r\n| release/v5.5 | 4b8f5859dbe05d15372558f8a950b49f6ee44e42      |\r\n| release/v5.4 | c79cb4de468854937a0cbf82629fd65d04bffb27      |\r\n| release/v5.3 | 34e2726254201988e6e2752b2db4b70d73964d4c    |\r\n\r\n \r\n## Credits\r\n \r\nWe would like to thank Pavel Kohout and Luigino Camastra from Aisle Research for reporting this vulnerability and following up on responsible disclosure.\r\n \r\n",
+ "ghsa_id": "GHSA-vcw6-jc3p-4gj8",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-vcw6-jc3p-4gj8",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-vcw6-jc3p-4gj8"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2025-65092"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2025-11-20T04:34:19Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "ESP32-P4 JPEG Decoder Header Parsing Vulnerability",
+ "updated_at": "2025-11-20T04:34:19Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-vcw6-jc3p-4gj8",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP_DRIVER_JPEG (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.2 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP_DRIVER_JPEG (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.4 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "ESP_DRIVER_JPEG (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.4"
+  }
+ ],
+ "withdrawn_at": null
+}
