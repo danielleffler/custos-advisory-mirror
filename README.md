@@ -39,8 +39,11 @@ DECISIONS.md).
 
 ## Sync
 
-`tools/sync.py` (stdlib Python; `git` for tag listing). Scheduled by the
-workflow in `.github/workflows/sync.yml`; committed only when bytes
-moved. Manual run:
+This repo is **data only** (since 2026-08-10). The sync code lives in
+the custos monorepo (`advisory-sync/sync.py`,
+https://github.com/danielleffler/custos), scheduled there by
+`advisory-mirror-sync.yml`, which pushes here with a write deploy key —
+so the workflow that produced a commit is the workflow that pushed it.
+Commits land only when bytes moved. Manual run, from a custos checkout:
 
-    python3 tools/sync.py            # GITHUB_TOKEN optional (rate limits)
+    python3 advisory-sync/sync.py <path-to-this-checkout>
