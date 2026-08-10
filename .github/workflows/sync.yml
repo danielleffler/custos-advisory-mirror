@@ -1,8 +1,16 @@
 name: sync
 # Daily, before custos-server's advisory nightly (16:05 UTC) so a
 # nightly that clones this mirror sees a same-day sync. Commits only
-# when bytes moved; the git history is the audit archive every pin
-# record's commit hash points into.
+# when bytes moved (true since 2026-08-10 — syncdate.json now moves
+# only with the data, so quiet days are zero-diff); the git history is
+# the audit archive every pin record's commit hash points into.
+#
+# CAVEAT: with quiet days producing no commits, GitHub disables this
+# schedule after 60 days without repo activity (it emails first). If
+# that fires, re-enable via the Actions tab — and treat a long-quiet
+# mirror as worth a look, not just a chore: the consumer records
+# syncdate.json's synced_at in every pin, so staleness is visible
+# downstream.
 on:
   schedule:
     - cron: "35 14 * * *"

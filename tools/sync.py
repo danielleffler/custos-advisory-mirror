@@ -29,6 +29,27 @@ def die(msg):
     sys.exit(1)
 
 
+def guard_shrink(what, existing, removing):
+    """The deletion floor. A truncated OSV export or an empty-but-200
+    GHSA response must not read as 'everything was withdrawn': deleting
+    the mirror's records makes the downstream snapshot look evaluated-
+    clean, which is the exact false-clean this mirror exists to prevent.
+    Removing every record, or more than half, refuses unless the
+    operator states the shrink is real (SYNC_ALLOW_SHRINK=1)."""
+    if not existing or not removing:
+        return
+    if os.environ.get("SYNC_ALLOW_SHRINK") == "1":
+        print(f"{what}: SYNC_ALLOW_SHRINK=1 -- allowing removal of "
+              f"{len(removing)}/{len(existing)} records")
+        return
+    if len(removing) == len(existing) or len(removing) * 2 > len(existing):
+        die(f"{what}: refusing to remove {len(removing)} of "
+            f"{len(existing)} mirrored records in one run -- this looks "
+            "like a truncated or empty upstream response, not a "
+            "withdrawal wave. If the shrink is real, re-run with "
+            "SYNC_ALLOW_SHRINK=1.")
+
+
 def read_repos():
     repos = []
     for line in (ROOT / "repos.txt").read_text().splitlines():
@@ -115,22 +136,23 @@ def sync_osv(repos):
                                     stable_bytes(rec)):
                     changed += 1
         # Records that left the export (withdrawn upstream) leave the
-        # mirror too -- the git history is the archive.
-        removed = 0
+        # mirror too -- the git history is the archive. Behind the
+        # deletion floor: mass removal refuses (guard_shrink).
         osv_dir = ROOT / "osv"
-        if osv_dir.is_dir():
-            for path in sorted(osv_dir.glob("*.json")):
-                if path.stem not in seen_ids:
-                    path.unlink()
-                    removed += 1
+        existing = sorted(osv_dir.glob("*.json")) if osv_dir.is_dir() else []
+        removing = [p for p in existing if p.stem not in seen_ids]
+        guard_shrink("osv", existing, removing)
+        for path in removing:
+            path.unlink()
         print(f"osv: {kept} in-breadth records ({changed} changed, "
-              f"{removed} removed)")
-        return last_modified
+              f"{len(removing)} removed)")
+        return last_modified, changed + len(removing)
 
 
 def sync_ghsa(repos):
     """The repository-advisories API, verbatim, per mirrored repo."""
     total = 0
+    moved = 0
     for repo in repos:
         owner_name = repo.removeprefix("https://github.com/")
         slug = owner_name.replace("/", "__")
@@ -157,22 +179,29 @@ def sync_ghsa(repos):
             if not isinstance(ghsa_id, str) or not ghsa_id.startswith("GHSA-"):
                 die(f"ghsa {owner_name}: advisory with unusable ghsa_id")
             seen.add(ghsa_id)
-            write_if_changed(ROOT / "ghsa" / slug / f"{ghsa_id}.json",
-                             stable_bytes(adv))
+            if write_if_changed(ROOT / "ghsa" / slug / f"{ghsa_id}.json",
+                                stable_bytes(adv)):
+                moved += 1
+        # Same deletion floor as the OSV leg, per repo: a `200 []` from
+        # the API (rate limiting, permission change, rename, deprecation)
+        # must not silently unlist every advisory for that repo.
         ghsa_dir = ROOT / "ghsa" / slug
-        if ghsa_dir.is_dir():
-            for path in sorted(ghsa_dir.glob("*.json")):
-                if path.stem not in seen:
-                    path.unlink()
+        existing = sorted(ghsa_dir.glob("*.json")) if ghsa_dir.is_dir() else []
+        removing = [p for p in existing if p.stem not in seen]
+        guard_shrink(f"ghsa {owner_name}", existing, removing)
+        for path in removing:
+            path.unlink()
+        moved += len(removing)
         print(f"ghsa: {owner_name}: {len(advisories)} published advisories")
         total += len(advisories)
-    return total
+    return moved
 
 
 def sync_tags(repos):
     """`git ls-remote --tags`, names only, peeled refs dropped. The tag
     list is what lets a GHSA version RANGE become an enumerated version
     SET deterministically at conversion time."""
+    moved = 0
     for repo in repos:
         slug = repo.removeprefix("https://github.com/").replace("/", "__")
         proc = subprocess.run(
@@ -193,22 +222,31 @@ def sync_tags(repos):
         if not tags:
             die(f"tags: {repo} lists no tags -- a repo with no tags cannot "
                 "anchor range enumeration; investigate before mirroring")
-        write_if_changed(ROOT / "tags" / f"{slug}.json",
-                         stable_bytes({"repo": repo, "tags": sorted(tags)}))
+        if write_if_changed(ROOT / "tags" / f"{slug}.json",
+                            stable_bytes({"repo": repo, "tags": sorted(tags)})):
+            moved += 1
         print(f"tags: {slug}: {len(tags)}")
+    return moved
 
 
 def main():
     repos = read_repos()
-    last_modified = sync_osv(repos)
-    sync_ghsa(repos)
-    sync_tags(repos)
-    (ROOT / "syncdate.json").write_bytes(stable_bytes({
-        "synced_at": datetime.now(timezone.utc)
-        .strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "osv_export_last_modified": last_modified,
-    }))
-    print("sync: done")
+    last_modified, osv_moved = sync_osv(repos)
+    ghsa_moved = sync_ghsa(repos)
+    tags_moved = sync_tags(repos)
+    moved = osv_moved + ghsa_moved + tags_moved
+    # syncdate.json moves only when mirrored bytes moved (or on first
+    # sync), so "commits only when bytes moved" is actually true and
+    # `synced_at` means "when the mirrored content last changed" -- the
+    # data instant, not the run instant. Writing it unconditionally made
+    # every daily run a commit and every no-op day look like movement.
+    if moved or not (ROOT / "syncdate.json").is_file():
+        (ROOT / "syncdate.json").write_bytes(stable_bytes({
+            "synced_at": datetime.now(timezone.utc)
+            .strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "osv_export_last_modified": last_modified,
+        }))
+    print(f"sync: done ({moved} records moved)")
 
 
 if __name__ == "__main__":
