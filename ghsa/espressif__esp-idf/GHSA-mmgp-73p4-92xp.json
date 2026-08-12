@@ -123,7 +123,7 @@
     "ecosystem": "other",
     "name": "esp_tee (ESP-IDF)"
    },
-   "patched_versions": "v5.5.5 (yet to be released)",
+   "patched_versions": "v5.5.5",
    "vulnerable_functions": [],
    "vulnerable_version_range": "v5.5.4"
   }
