@@ -1,0 +1,136 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "ZeroX-404",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/114817051?v=4",
+    "events_url": "https://api.github.com/users/ZeroX-404/events{/privacy}",
+    "followers_url": "https://api.github.com/users/ZeroX-404/followers",
+    "following_url": "https://api.github.com/users/ZeroX-404/following{/other_user}",
+    "gists_url": "https://api.github.com/users/ZeroX-404/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/ZeroX-404",
+    "id": 114817051,
+    "login": "ZeroX-404",
+    "node_id": "U_kgDOBtf4Gw",
+    "organizations_url": "https://api.github.com/users/ZeroX-404/orgs",
+    "received_events_url": "https://api.github.com/users/ZeroX-404/received_events",
+    "repos_url": "https://api.github.com/users/ZeroX-404/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/ZeroX-404/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/ZeroX-404/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/ZeroX-404",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-81508",
+ "cvss": {
+  "score": 4.3,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 4.3,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-125"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-125",
+   "name": "Out-of-bounds Read"
+  }
+ ],
+ "description": "### description\r\n\r\n## Description\r\nAn out-of-bounds read exists in the BlueDroid A2DP sink media-packet handler (`btc_a2dp_sink_handle_inc_media()`). The handler accessed a timestamp field from the received media buffer before the packet layout had been validated, so a malformed A2DP media packet could cause a read past the valid packet boundary into adjacent heap memory.\r\n\r\n### Impact\r\nA paired BR/EDR peer that already has an A2DP connection can deliver a malformed media packet to this path. The primary consequence is limited disclosure of heap contents adjacent to the received media buffer; arbitrary memory is not directly exposed, and code execution has not been indicated. The issue is reachable only on builds with BlueDroid Classic Bluetooth and A2DP sink support enabled. The attacker must be a paired Bluetooth audio source within radio range.\r\n\r\n### Resolution\r\nThe A2DP sink handler now validates the packet layout before reading the timestamp field. Packets with an invalid layout are rejected on the normal error path, so the timestamp access cannot read past the received buffer.\r\n\r\n### Fix Commit Records\r\n| Branch | Commits |\r\n|--------------|---------------|\r\n| master | [6cb20db](https://github.com/espressif/esp-idf/commit/6cb20db4dfeee81314d0c55acb82f3f0e7679abe) |\r\n| release/v6.1 | [85d56bc](https://github.com/espressif/esp-idf/commit/85d56bcd266117e0fe6a6b75511c8e122fda29ad) |\r\n| release/v6.0 | [0d11813](https://github.com/espressif/esp-idf/commit/0d118139ff8b7aa87b656c2f4a6421ecaa1f5939) |\r\n| release/v5.5 | [ca55d63](https://github.com/espressif/esp-idf/commit/ca55d63de82e41e2c672bfd2b707fc80911f30ce) |\r\n\r\n### Workarounds\r\nNone \u2014 upgrade required. The fix is on `master` and on the `release/v6.1`, `release/v6.0`, and `release/v5.5` branches listed above. Disable A2DP sink / Classic Bluetooth if the product does not need them.\r\n\r\n### Credits\r\nWe would like to thank Epenetus Matias Putra for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-xcpr-5mqp-9qvv",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-xcpr-5mqp-9qvv",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-xcpr-5mqp-9qvv"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-81508"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-09-03T11:01:53Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/85924095?v=4",
+  "events_url": "https://api.github.com/users/ESP-Mars/events{/privacy}",
+  "followers_url": "https://api.github.com/users/ESP-Mars/followers",
+  "following_url": "https://api.github.com/users/ESP-Mars/following{/other_user}",
+  "gists_url": "https://api.github.com/users/ESP-Mars/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/ESP-Mars",
+  "id": 85924095,
+  "login": "ESP-Mars",
+  "node_id": "MDQ6VXNlcjg1OTI0MDk1",
+  "organizations_url": "https://api.github.com/users/ESP-Mars/orgs",
+  "received_events_url": "https://api.github.com/users/ESP-Mars/received_events",
+  "repos_url": "https://api.github.com/users/ESP-Mars/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/ESP-Mars/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/ESP-Mars/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/ESP-Mars",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Heap Out-of-Bounds Read in Bluedroid A2DP Sink Media Packet Processing",
+ "updated_at": "2026-09-03T11:01:53Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-xcpr-5mqp-9qvv",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "6.1.1 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "6.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "6.0.2",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "6.0.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.5.6 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.5.5"
+  }
+ ],
+ "withdrawn_at": null
+}

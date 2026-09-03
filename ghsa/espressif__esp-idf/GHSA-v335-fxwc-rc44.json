@@ -1,0 +1,163 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "DatanoiseTV",
+   "type": "reporter"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/6614616?v=4",
+    "events_url": "https://api.github.com/users/DatanoiseTV/events{/privacy}",
+    "followers_url": "https://api.github.com/users/DatanoiseTV/followers",
+    "following_url": "https://api.github.com/users/DatanoiseTV/following{/other_user}",
+    "gists_url": "https://api.github.com/users/DatanoiseTV/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/DatanoiseTV",
+    "id": 6614616,
+    "login": "DatanoiseTV",
+    "node_id": "MDQ6VXNlcjY2MTQ2MTY=",
+    "organizations_url": "https://api.github.com/users/DatanoiseTV/orgs",
+    "received_events_url": "https://api.github.com/users/DatanoiseTV/received_events",
+    "repos_url": "https://api.github.com/users/DatanoiseTV/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/DatanoiseTV/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/DatanoiseTV/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/DatanoiseTV",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": "CVE-2026-81507",
+ "cvss": {
+  "score": 6.5,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 6.5,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-125"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-125",
+   "name": "Out-of-bounds Read"
+  }
+ ],
+ "description": "### Description\r\nAn out-of-bounds read exists in BlueDroid L2CAP configuration-option processing (`l2c_main.c` / `l2c_utils.c`). Option lengths were not consistently checked against the remaining bytes of the received configuration packet, so a malformed L2CAP configuration request from a remote BR/EDR peer could cause the parser to read past the end of the packet buffer.\r\n\r\n### Impact\r\nA remote Bluetooth device within radio range can reach this path during L2CAP channel configuration, without authentication or encryption. Under some runtime conditions, data read beyond the received packet may be included in an outbound L2CAP Configuration Response, disclosing limited adjacent memory (for example fragments of Bluetooth stack state). The issue affects ESP32-class products that use the BlueDroid host stack with Classic Bluetooth (BR/EDR) enabled.\r\n\r\n### Resolution\r\nThe L2CAP configuration parser now validates option boundaries and protocol-defined lengths before use. Truncated, malformed, or inconsistent option fields are rejected on the normal protocol path, so configuration processing cannot read past the received packet.\r\n\r\n### Fix Commit Records\r\n| Branch | Commits |\r\n|--------------|---------------|\r\n| master | [c8cd8f4](https://github.com/espressif/esp-idf/commit/c8cd8f4f3019ae2f912c8cbe9974445e8d9b8749) |\r\n| release/v6.1 | [14c9955](https://github.com/espressif/esp-idf/commit/14c99559b4337cabcf0f09c21d16b93c4cd7a6fe) |\r\n| release/v6.0 | [9a6d04f](https://github.com/espressif/esp-idf/commit/9a6d04f65e0e341e7d72bd417c9f31b8a04ce846) |\r\n| release/v5.5 | [1e07f6d](https://github.com/espressif/esp-idf/commit/1e07f6d83ca892630a7210df2958455f7ca77b4a) |\r\n| release/v5.4 | [5731c63](https://github.com/espressif/esp-idf/commit/5731c63ece128f156939b9f734256e2227c1442a) |\r\n| release/v5.3 | [8de265d](https://github.com/espressif/esp-idf/commit/8de265dc44b1b22c749ea44ee7c609b3da4162f0) |\r\n| release/v5.2 | [c261025](https://github.com/espressif/esp-idf/commit/c2610255a5adce651ca582bb82368c3dd0ee2834) |\r\n\r\n### Workarounds\r\nNone \u2014 upgrade required. The fix is on `master` and on the `release/v6.1`, `release/v6.0`, `release/v5.5`, `release/v5.4`, `release/v5.3`, and `release/v5.2` branches listed above. Disable Classic Bluetooth (BR/EDR) / BlueDroid if the product does not need it.\r\n\r\n### Credits\r\nWe would like to thank DatanoiseTV / Sylwester Sosnowski for reporting this vulnerability and following up on responsible disclosure.\r\n",
+ "ghsa_id": "GHSA-v335-fxwc-rc44",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-v335-fxwc-rc44",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-v335-fxwc-rc44"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-81507"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-09-03T11:01:49Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/85924095?v=4",
+  "events_url": "https://api.github.com/users/ESP-Mars/events{/privacy}",
+  "followers_url": "https://api.github.com/users/ESP-Mars/followers",
+  "following_url": "https://api.github.com/users/ESP-Mars/following{/other_user}",
+  "gists_url": "https://api.github.com/users/ESP-Mars/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/ESP-Mars",
+  "id": 85924095,
+  "login": "ESP-Mars",
+  "node_id": "MDQ6VXNlcjg1OTI0MDk1",
+  "organizations_url": "https://api.github.com/users/ESP-Mars/orgs",
+  "received_events_url": "https://api.github.com/users/ESP-Mars/received_events",
+  "repos_url": "https://api.github.com/users/ESP-Mars/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/ESP-Mars/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/ESP-Mars/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/ESP-Mars",
+  "user_view_type": "public"
+ },
+ "severity": "medium",
+ "state": "published",
+ "submission": null,
+ "summary": "Bluetooth Classic L2CAP Heap Memory Disclosure Allowing Unauthorized Access to Sensitive Data",
+ "updated_at": "2026-09-03T11:01:50Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-v335-fxwc-rc44",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "6.1.1 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "6.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "6.0.2",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "6.0.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.5.5",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.5.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.4.5 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.3.6 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "Bluetooth Stack (ESP-IDF)"
+   },
+   "patched_versions": "5.2.8 (yet-to-release)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "5.2.7"
+  }
+ ],
+ "withdrawn_at": null
+}
