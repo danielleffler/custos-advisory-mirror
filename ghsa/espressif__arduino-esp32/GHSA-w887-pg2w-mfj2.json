@@ -1,0 +1,114 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "lucasssvaz",
+   "type": "remediation_developer"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "remediation_developer",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+    "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+    "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+    "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/lucasssvaz",
+    "id": 32426024,
+    "login": "lucasssvaz",
+    "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+    "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+    "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+    "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/lucasssvaz",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": null,
+ "cvss": {
+  "score": 9.1,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 9.1,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-287"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-287",
+   "name": "Improper Authentication"
+  }
+ ],
+ "description": "An authentication bypass vulnerability was identified in the Arduino-ESP32 `WebServer` library.\r\n\r\n`WebServer::authenticate(const char *username, const char *password)` incorrectly accepted arbitrary non-empty `Authorization` header values whose contents matched the configured username, even when the header did not specify an HTTP authentication scheme or password (for example, `Authorization: admin`).\r\n\r\nRequests with such headers were parsed as `OTHER_AUTH`. When the built-in plaintext password authenticator was used, a matching username caused the implementation to return the configured password, resulting in successful authentication without validating any credentials.\r\n\r\nThis issue affects sketches that rely on the built-in plaintext authentication mechanism provided by `WebServer::authenticate(username, password)` or `AuthenticationMiddleware` configured with a plaintext password.\r\n\r\nSketches using a custom authentication callback are not affected, as the callback receives `OTHER_AUTH` and performs its own validation. `authenticateBasicSHA1()` was not affected because it already required the `Basic` authentication scheme.\r\n\r\n### Impact\r\n\r\nAn unauthenticated attacker with network access to the device may bypass authentication protecting HTTP endpoints implemented using the affected API.\r\n\r\nThe resulting impact depends on the application. Deployments exposing configuration interfaces, administrative endpoints, credential management, or device control functionality may permit unauthorized access or modification.\r\n\r\n### Patches\r\n\r\nThe authentication logic now accepts only the `Basic` and `Digest` authentication schemes. Any other `Authorization` header format, including bare username values, is rejected.\r\n\r\nUsers should upgrade to a patched Arduino-ESP32 release once available.\r\n\r\n### Workarounds\r\n\r\nUntil patched releases are available:\r\n\r\n- Use a custom authentication callback that explicitly rejects authentication modes other than `BASIC_AUTH` or `DIGEST_AUTH`.\r\n- Use `authenticateBasicSHA1()` where appropriate.\r\n- Limit network exposure of the HTTP server using appropriate firewalling, network segmentation, or by disabling SoftAP when it is not required.\r\n\r\n### References\r\n\r\nhttps://github.com/espressif/arduino-esp32/commit/5cdf8975ae8d9e35888b724b01a444d22406424e\r\n\r\n## Credits\r\n\r\nWe thank Sunho Park for responsibly reporting this vulnerability.",
+ "ghsa_id": "GHSA-w887-pg2w-mfj2",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-w887-pg2w-mfj2",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-w887-pg2w-mfj2"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-09-18T15:48:50Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "critical",
+ "state": "published",
+ "submission": null,
+ "summary": "Webserver Authentication bypass",
+ "updated_at": "2026-09-18T15:48:50Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-w887-pg2w-mfj2",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "arduino-esp32"
+   },
+   "patched_versions": ">3.3.11 (5cdf8975ae8d9e35888b724b01a444d22406424e)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "<=3.3.11, 4.0.0-alpha1"
+  }
+ ],
+ "withdrawn_at": null
+}

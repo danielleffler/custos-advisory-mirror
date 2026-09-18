@@ -1,0 +1,114 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "created_at": null,
+ "credits": [
+  {
+   "login": "lucasssvaz",
+   "type": "remediation_developer"
+  }
+ ],
+ "credits_detailed": [
+  {
+   "state": "accepted",
+   "type": "remediation_developer",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+    "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+    "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+    "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+    "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/lucasssvaz",
+    "id": 32426024,
+    "login": "lucasssvaz",
+    "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+    "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+    "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+    "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/lucasssvaz",
+    "user_view_type": "public"
+   }
+  }
+ ],
+ "cve_id": null,
+ "cvss": {
+  "score": 7.5,
+  "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.5,
+   "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-22"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-22",
+   "name": "Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')"
+  }
+ ],
+ "description": "A path traversal vulnerability was identified in the Arduino-ESP32 `WebServer` library's static file serving implementation.\r\n\r\n`serveStatic()` did not properly reject request paths containing `.` or `..` path segments, including percent-encoded representations. As a result, specially crafted requests could resolve to files outside the directory configured as the static document root.\r\n\r\n### Impact\r\n\r\nAn unauthenticated attacker with network access to the HTTP server may read files outside the intended `serveStatic()` directory when the application serves content from a filesystem such as LittleFS or SPIFFS.\r\n\r\nThe severity depends on the filesystem layout. Applications storing credentials, configuration files, certificates, or other sensitive data on the same filesystem may unintentionally expose those files.\r\n\r\nApplications that do not use `serveStatic()`, or that expose only a dedicated public directory with no sensitive files elsewhere on the mounted filesystem, are not materially affected.\r\n\r\n### Patches\r\n\r\n`serveStatic()` now rejects request paths containing literal or percent-encoded `.` or `..` path segments, ensuring that resolved paths remain within the configured static root.\r\n\r\nUsers should upgrade to a patched Arduino-ESP32 release once available.\r\n\r\n### Workarounds\r\n\r\nUntil patched releases are available:\r\n\r\n- Store sensitive files outside the filesystem used by `serveStatic()`.\r\n- Serve static content from a dedicated public directory instead of the filesystem root.\r\n- Restrict network exposure of the HTTP server using firewalling, network segmentation, or by disabling SoftAP when it is not required.\r\n\r\n### References\r\n\r\nhttps://github.com/espressif/arduino-esp32/commit/5cdf8975ae8d9e35888b724b01a444d22406424e\r\n\r\n## Credits\r\n\r\nWe thank Sunho Park for responsibly reporting this vulnerability.",
+ "ghsa_id": "GHSA-vqp8-ppw3-8mc7",
+ "html_url": "https://github.com/espressif/arduino-esp32/security/advisories/GHSA-vqp8-ppw3-8mc7",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-vqp8-ppw3-8mc7"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-09-18T15:48:36Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/32426024?v=4",
+  "events_url": "https://api.github.com/users/lucasssvaz/events{/privacy}",
+  "followers_url": "https://api.github.com/users/lucasssvaz/followers",
+  "following_url": "https://api.github.com/users/lucasssvaz/following{/other_user}",
+  "gists_url": "https://api.github.com/users/lucasssvaz/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/lucasssvaz",
+  "id": 32426024,
+  "login": "lucasssvaz",
+  "node_id": "MDQ6VXNlcjMyNDI2MDI0",
+  "organizations_url": "https://api.github.com/users/lucasssvaz/orgs",
+  "received_events_url": "https://api.github.com/users/lucasssvaz/received_events",
+  "repos_url": "https://api.github.com/users/lucasssvaz/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/lucasssvaz/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/lucasssvaz",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Path traversal in Webserver's serveStatic()",
+ "updated_at": "2026-09-18T15:48:36Z",
+ "url": "https://api.github.com/repos/espressif/arduino-esp32/security-advisories/GHSA-vqp8-ppw3-8mc7",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "arduino-esp32"
+   },
+   "patched_versions": ">3.3.11 (5cdf8975ae8d9e35888b724b01a444d22406424e)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "<=3.3.11, 4.0.0-alpha1"
+  }
+ ],
+ "withdrawn_at": null
+}
