@@ -8,6 +8,10 @@
   {
    "login": "lucasssvaz",
    "type": "remediation_developer"
+  },
+  {
+   "login": "shpark1104",
+   "type": "reporter"
   }
  ],
  "credits_detailed": [
@@ -33,6 +37,31 @@
     "subscriptions_url": "https://api.github.com/users/lucasssvaz/subscriptions",
     "type": "User",
     "url": "https://api.github.com/users/lucasssvaz",
+    "user_view_type": "public"
+   }
+  },
+  {
+   "state": "accepted",
+   "type": "reporter",
+   "user": {
+    "avatar_url": "https://avatars.githubusercontent.com/u/94028968?v=4",
+    "events_url": "https://api.github.com/users/shpark1104/events{/privacy}",
+    "followers_url": "https://api.github.com/users/shpark1104/followers",
+    "following_url": "https://api.github.com/users/shpark1104/following{/other_user}",
+    "gists_url": "https://api.github.com/users/shpark1104/gists{/gist_id}",
+    "gravatar_id": "",
+    "html_url": "https://github.com/shpark1104",
+    "id": 94028968,
+    "login": "shpark1104",
+    "node_id": "U_kgDOBZrEqA",
+    "organizations_url": "https://api.github.com/users/shpark1104/orgs",
+    "received_events_url": "https://api.github.com/users/shpark1104/received_events",
+    "repos_url": "https://api.github.com/users/shpark1104/repos",
+    "site_admin": false,
+    "starred_url": "https://api.github.com/users/shpark1104/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/shpark1104/subscriptions",
+    "type": "User",
+    "url": "https://api.github.com/users/shpark1104",
     "user_view_type": "public"
    }
   }
