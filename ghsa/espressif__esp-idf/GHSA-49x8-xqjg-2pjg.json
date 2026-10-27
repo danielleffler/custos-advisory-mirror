@@ -1,0 +1,111 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "comments": 1,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2026-113780",
+ "cvss": {
+  "score": 9.3,
+  "vector_string": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 9.3,
+   "vector_string": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-787",
+  "CWE-822"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  },
+  {
+   "cwe_id": "CWE-822",
+   "name": "Untrusted Pointer Dereference"
+  }
+ ],
+ "description": "## Description\r\nThe `esp_tee` component handles calls from the user application (i.e. the REE) to the TEE through a RISC-V machine-mode (M-mode) trap entry in `esp_tee_vectors_plic.S` and `esp_tee_vectors_clic.S`. On a secure-service `ecall`, the trap entry saved the incoming register context through the caller-supplied stack pointer before switching to the trusted TEE stack and before validating that pointer. Because the trap entry runs in RISC-V machine mode (M-mode) with full address-space access, a caller could supply a stack pointer into TEE-exclusive memory and cause the register frame to be written there, making this an arbitrary M-mode write. The same unvalidated stack pointer pattern was present on both the user `ecall` entry path and the interrupt entry path.\r\n\r\n## Impact\r\nAn unprivileged REE application can direct the ESP-TEE trap entry to write attacker-influenced content into TEE-resident memory, breaking the REE/TEE isolation boundary. When the write targets TEE control-flow data that the TEE later dereferences, this can be escalated to arbitrary code execution within the TEE, effectively elevating the attacker from the REE to the TEE. Other outcomes include TEE memory corruption, denial of service, and system crashes. The attacker only needs local code execution in the REE; no TEE privileges are required.\r\n\r\nThis issue affects Espressif SoCs with ESP-TEE support (ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2).\r\n\r\n## Resolution\r\nThe ESP-TEE trap entry now validates the REE-supplied stack pointer at the privilege-switch boundary before any register context is saved through it. A stack pointer whose save frame would overlap TEE memory is rejected before being dereferenced, terminating the call with a trusted-stack panic. The fix covers both the user `ecall` entry path and the interrupt entry path.\r\n\r\n## Fix Commit Records\r\n| Branch       | Commits |\r\n|--------------|---------|\r\n| master       | [`acb7d99`](https://github.com/espressif/esp-idf/commit/acb7d996b07293abf591b93f4aaffa04ae6732d9) |\r\n| release/v6.1 | [`773761a`](https://github.com/espressif/esp-idf/commit/773761abb893d43d0a5b8b75ec0a1c2cf0287d53) |\r\n| release/v6.0 | [`b85a7b0`](https://github.com/espressif/esp-idf/commit/b85a7b0e1449ac9aec30a0c3e3b6515725556fd1) |\r\n| release/v5.5 | [`dabd37f`](https://github.com/espressif/esp-idf/commit/dabd37fae8d2a7b1cc71f48fce824b0b9d909a07) |\r\n\r\n## Workarounds\r\nThere is no runtime workaround for this issue. The fix is included in ESP-IDF v5.5.6 and will be included in v6.1.1 and v6.0.4 (yet to be released). Users are kindly advised to either update to a release that carries the fix or to cherry-pick the commit listed in the **Fix Commit Records** table above onto their downstream branch.\r\n\r\n## Credits\r\nWe would like to thank Xiaobye (@xiaobye_tw) of DEVCORE Research Team for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-49x8-xqjg-2pjg",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-49x8-xqjg-2pjg",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-49x8-xqjg-2pjg"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-113780"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-10-27T10:28:52Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "critical",
+ "state": "published",
+ "submission": null,
+ "summary": "Unvalidated Stack Pointer at the ESP-TEE Privilege-Switch Boundary",
+ "updated_at": "2026-10-27T10:28:52Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-49x8-xqjg-2pjg",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v6.1.1",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.1"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.4",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0.3"
+  },
+  {
+   "package": {
+    "ecosystem": "",
+    "name": "esp_tee (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.5"
+  }
+ ],
+ "withdrawn_at": null
+}
