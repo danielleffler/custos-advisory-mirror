@@ -1,0 +1,124 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "comments": 6,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2026-113782",
+ "cvss": {
+  "score": 7.1,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.1,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-121"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-121",
+   "name": "Stack-based Buffer Overflow"
+  }
+ ],
+ "description": "## Description\n\nAn out-of-bounds write vulnerability exists in the Neighbor Discovery (ND) packet handling of the ESP-IDF OpenThread Border Router. The issue can be triggered by a host on the Border Router's infrastructure (backbone) network sending a crafted ICMPv6 Router Advertisement to the Border Router's infrastructure network interface.\n\nWhile parsing an option carried in the ND packet, the Border Router derived the number of bytes to copy from an attacker-controlled length field without validating it against its expected range or against the size of the fixed stack buffer used to store the parsed data. A sender could supply an oversized length value, causing the copy to write past the end of the destination buffer into adjacent stack memory.\n\n## Impact\n\nA host on the same infrastructure link as the Border Router can exploit this vulnerability without authentication or user interaction, causing a denial of service (device crash and reboot) or corruption of adjacent stack memory. Only firmware built with `CONFIG_OPENTHREAD_BORDER_ROUTER=y` is affected; this option is disabled by default. Thread end devices, routers, and RCP firmware that do not enable the Border Router feature are not affected.\n\n## Resolution\n\nThe ND option handling was corrected to validate the length field against its expected range and against the destination buffer's capacity before performing the copy, preventing the out-of-bounds write. The fix is delivered through an update of the OpenThread Border Router library in the `openthread` component.\n\n## Affected Versions\n\nAffected releases are v5.2 through v5.2.7, v5.3 through v5.3.5, v5.4 through v5.4.4, v5.5 through v5.5.4, and v6.0 through v6.0.2. ESP-IDF v6.1 and later are not affected. ESP-IDF v5.1 and earlier have reached end of life and will not receive a fix.\n\n## Fix Commit Records\n\n| Branch       | Commits       |\n|--------------|---------------|\n| master       | [c828d0d](https://github.com/espressif/esp-idf/commit/c828d0d709f1c46fa2b9e1ed3ce9d8dc4b29c42f) |\n| release/v6.0 | [e18d27e](https://github.com/espressif/esp-idf/commit/e18d27e480aec2b282898f4afc22b0f738ea7c04) |\n| release/v5.5 | [f9bb1be](https://github.com/espressif/esp-idf/commit/f9bb1be59081ccef03a1b4b1fab9a225f28b1b61) |\n| release/v5.4 | [4068c4e](https://github.com/espressif/esp-idf/commit/4068c4e7d061b3e2d6096734509feadc14594e28) |\n| release/v5.3 | [b6860b2](https://github.com/espressif/esp-idf/commit/b6860b2db50406adf0aaebd75f2e9fe64cc805a9) |\n| release/v5.2 | [c22480b](https://github.com/espressif/esp-idf/commit/c22480ba07fc1de454a63d42275c764d95c7bd9c) |\n\n## Workarounds\n\nNone. Upgrade to a release that contains the fix (see Affected Versions above). As an interim mitigation, restrict which hosts can reach the Border Router's infrastructure network interface, since the vulnerability is only reachable from that link.\n\n## Credits\n\nWe would like to thank @Eun0us / @EspilonOrg for reporting this vulnerability and following up on responsible disclosure.\n\n",
+ "ghsa_id": "GHSA-c26h-gm53-qg83",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-c26h-gm53-qg83",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-c26h-gm53-qg83"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-113782"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-10-30T14:52:02Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Stack-Based Out-of-Bounds Write in Thread Border Router ND6 Option Parsing",
+ "updated_at": "2026-10-30T14:52:02Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-c26h-gm53-qg83",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "OpenThread Border Router (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.3",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0.2"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "OpenThread Border Router (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.5",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.4"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "OpenThread Border Router (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "OpenThread Border Router (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "OpenThread Border Router (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.8",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.7"
+  }
+ ],
+ "withdrawn_at": null
+}

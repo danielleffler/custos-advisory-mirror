@@ -1,0 +1,115 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "comments": 3,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2026-113783",
+ "cvss": {
+  "score": 7.4,
+  "vector_string": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.4,
+   "vector_string": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-121"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-121",
+   "name": "Stack-based Buffer Overflow"
+  }
+ ],
+ "description": "## Description\n\nA stack-based buffer overflow exists in the lwIP DNS resolver's cached-lookup path (`dns_lookup()` in `dns.c`). When a DNS cache entry holds multiple IP addresses and the caller provides a single `ip_addr_t` output buffer, `dns_lookup()` copies every cached address through an incrementing index without bounds checking, writing past the caller's buffer into adjacent stack memory.\n\nThe overflow requires `CONFIG_LWIP_DNS_MAX_HOST_IP` to be set to a value greater than 1 (the default is 1) and a hostname that resolves to multiple A or AAAA records. The `dns_gethostbyname()` / `dns_gethostbyname_addrtype()` APIs do not take a buffer-length parameter, so callers that supply a single-element buffer, such as the lwIP SNTP client, have no way to prevent the overflow. The first resolution of a hostname goes to the network and is unaffected; the overflow occurs on subsequent lookups served from the DNS cache.\n\n## Impact\n\nA network-positioned attacker who can influence DNS responses (a rogue or spoofed DNS server) can corrupt stack memory in any lwIP API consumer that calls `dns_gethostbyname()` with a single-element output buffer. The overflowing bytes are the raw address records chosen by the attacker. Because many public hostnames (including NTP pools) legitimately return multiple records, affected devices can also crash without any attacker involvement.\n\nWhen stack smashing protection is enabled (`CONFIG_COMPILER_STACK_CHECK_MODE` is `NONE` by default), the overflow reliably corrupts the stack canary and the device aborts and reboots, resulting in a **remote denial of service**.\n\nWithout stack protection, the overflow silently overwrites adjacent stack variables with attacker-controlled data. Depending on the architecture, optimization level, and stack frame layout this can alter program logic and may allow control-flow redirection.\n\n**Preconditions:**\n\n- `CONFIG_LWIP_DNS_MAX_HOST_IP` is set to 2 or higher. The ESP-IDF default is 1; note that the `protocols/dns_over_https` example ships with a value of 4.\n- The device resolves a hostname that returns multiple A or AAAA records through an API that supplies a single-element buffer (for example the SNTP client).\n\n## Resolution\n\nThe fix bounds the copy loop in `dns_lookup()` to the number of entries the caller's buffer can hold. The existing `dns_gethostbyname()` / `dns_gethostbyname_addrtype()` APIs now return at most one address, matching the implicit contract of callers that supply a single `ip_addr_t`. New `dns_gethostbyname_addrtype_n()` and `netconn_gethostbyname_*_n()` variants take an explicit address count for callers that want multiple addresses; the socket API (`getaddrinfo()` / `gethostbyname()`) uses these internally and continues to return up to `CONFIG_LWIP_DNS_MAX_HOST_IP` addresses.\n\n## Affected Versions\n\nThe multi-IP DNS option was introduced in ESP-IDF v5.4 and backported to v5.3.2 and v5.2.3. Affected releases are v5.2.3 through v5.2.8, v5.3.2 through v5.3.6, v5.4 through v5.4.4, v5.5 through v5.5.5, and v6.0 through v6.0.2. ESP-IDF v5.1 and earlier are not affected.\n\n## Fix Commit Records\n\n| Branch       | Commits       |\n|--------------|---------------|\n| master       | [75f2ff7](https://github.com/espressif/esp-idf/commit/75f2ff7e0c2d19e113293ec122b701c83d2f6665) |\n| release/v6.1 | [98e6e7a](https://github.com/espressif/esp-idf/commit/98e6e7a08fca391563651a1e751cc45a3b27d18b) |\n| release/v6.0 | [defaa2f](https://github.com/espressif/esp-idf/commit/defaa2f559470acfee5e2e5ea80a79b73424d483) |\n| release/v5.5 | [af7543d](https://github.com/espressif/esp-idf/commit/af7543d00a4d7b489e010a70b59fd3d8022a40f4) |\n| release/v5.4 | [882843d](https://github.com/espressif/esp-idf/commit/882843dbf838b0c02e09d46bb6283bda73496b8c) |\n| release/v5.3 | [7ab85eb](https://github.com/espressif/esp-idf/commit/7ab85eb4dc7d7695960d940badcd62592c365056) |\n\n## Workarounds\n\nUpgrade to a release that contains the fix (see Affected Versions above). ESP-IDF v5.2 has reached the end of its support period and will not receive a fix.\n\n- Keep `CONFIG_LWIP_DNS_MAX_HOST_IP=1` (the default). With a single cached address per hostname the overflow cannot occur.\n- Enable stack smashing protection (`CONFIG_COMPILER_STACK_CHECK_MODE_ALL=y` or `_STRONG`). This does not prevent the overflow but turns silent corruption into a deterministic abort.\n- Users on a release that does not yet contain the fix should keep the default value or migrate to a release that does.\n\n## Credits\n\nWe would like to thank Benedek Brandschott ([@brabema](https://github.com/brabema)) for reporting this vulnerability and following up on responsible disclosure.\n\n\n",
+ "ghsa_id": "GHSA-ch63-jxm5-vmvf",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-ch63-jxm5-vmvf",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-ch63-jxm5-vmvf"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-113783"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-10-30T14:08:24Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Stack-Based Buffer Overflow in lwIP DNS Cache Lookup with Multiple IP Addresses",
+ "updated_at": "2026-10-30T14:08:24Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-ch63-jxm5-vmvf",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "lwIP DNS (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.3",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0.2"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "lwIP DNS (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.5"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "lwIP DNS (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "lwIP DNS (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.7 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.6"
+  }
+ ],
+ "withdrawn_at": null
+}
