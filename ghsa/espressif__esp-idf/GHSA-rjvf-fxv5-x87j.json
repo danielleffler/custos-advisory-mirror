@@ -1,0 +1,129 @@
+{
+ "author": null,
+ "closed_at": null,
+ "collaborating_teams": null,
+ "collaborating_users": null,
+ "comments": 5,
+ "created_at": null,
+ "credits": [],
+ "credits_detailed": [],
+ "cve_id": "CVE-2026-113781",
+ "cvss": {
+  "score": 7.1,
+  "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+ },
+ "cvss_severities": {
+  "cvss_v3": {
+   "score": 7.1,
+   "vector_string": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+  },
+  "cvss_v4": {
+   "score": null,
+   "vector_string": null
+  }
+ },
+ "cwe_ids": [
+  "CWE-195",
+  "CWE-787"
+ ],
+ "cwes": [
+  {
+   "cwe_id": "CWE-195",
+   "name": "Signed to Unsigned Conversion Error"
+  },
+  {
+   "cwe_id": "CWE-787",
+   "name": "Out-of-bounds Write"
+  }
+ ],
+ "description": "## Description\r\n\r\nA signed-to-unsigned conversion error exists in the BLE Mesh GATT server read handler of the Bluedroid host adapter (`bt_mesh_bta_gatts_cb` in `esp_ble_mesh`). The attribute read callback returns a signed length, with negative values encoding ATT error codes, but the handler stored the result in an unsigned 16-bit variable. A failed read therefore appeared to the handler as a very large successful read length, which was then used as the size of a memory copy from a small stack buffer into the GATT response structure.\r\n\r\n## Impact\r\n\r\nA remote attacker within Bluetooth LE range who can connect to an exposed BLE Mesh GATT service (PB-GATT provisioning or Mesh Proxy) can trigger a failed attribute read with a crafted read request, without pairing or user interaction. The resulting out-of-bounds read and stack buffer overflow corrupts the Bluetooth host task stack, causing a crash and device restart and potentially further memory corruption.\r\n\r\n**Preconditions:**\r\n\r\n- The device is built with the Bluedroid host (`CONFIG_BT_BLUEDROID_ENABLED=y`) and BLE Mesh enabled. The NimBLE host adapter does not service GATT reads through this path and is not affected.\r\n- A BLE Mesh GATT bearer (PB-GATT or GATT Proxy) is enabled and advertising, so that a remote client can connect and read its attributes. These attributes typically do not require link-layer pairing or encryption, depending on device configuration.\r\n\r\n## Resolution\r\n\r\nThe handler now stores the read callback result in a signed variable matching the callback's return type, so a negative ATT error code is no longer misinterpreted as a successful length and no out-of-bounds copy can occur. A follow-up hardening change in the same code area additionally returns a proper ATT Error Response to the client on failure and clamps any read length to the size of the source buffer before copying.\r\n\r\n## Affected Versions\r\n\r\nThe affected code has been present since BLE Mesh support was introduced. Affected supported releases are v5.2 through v5.2.7, v5.3 through v5.3.5, v5.4 through v5.4.4, v5.5 through v5.5.5, and v6.0 through v6.0.2. ESP-IDF v6.1 and later are not affected. ESP-IDF v5.1 and earlier are also affected but have reached end of life and will not receive a fix.\r\n\r\n## Fix Commit Records\r\n\r\nThe first commit in each row is the fix; the second is the follow-up hardening change.\r\n\r\n| Branch       | Commits       |\r\n|--------------|---------------|\r\n| master       | [00adfb3](https://github.com/espressif/esp-idf/commit/00adfb3cbcf9a4a9e6ff1a2b99937a253887f8ca), [ed1f4de](https://github.com/espressif/esp-idf/commit/ed1f4de3a3740bdf15117de9b1b0b8c6cb123e33) |\r\n| release/v6.0 | [c146056](https://github.com/espressif/esp-idf/commit/c146056e55815cad542aff640a21e3f94879dd6a), [12aa692](https://github.com/espressif/esp-idf/commit/12aa692dcc59e84a52093b129ee8c45bb921787d) |\r\n| release/v5.5 | [ce902a8](https://github.com/espressif/esp-idf/commit/ce902a85135b0e069c125b11735aa8757fb528b2), [3033a5f](https://github.com/espressif/esp-idf/commit/3033a5fffb6a6849f4202ae29c93a12d09040ea0) |\r\n| release/v5.4 | [2fed52c](https://github.com/espressif/esp-idf/commit/2fed52c72944781562fb63b8be7b6d29f3cff97e), [696ea1b](https://github.com/espressif/esp-idf/commit/696ea1bb080bef9b0f23907826fce2e7145c4108) |\r\n| release/v5.3 | [f9da09d](https://github.com/espressif/esp-idf/commit/f9da09de61e98c9074d5cb89d5b1b4c37739fa85), [2d378a5](https://github.com/espressif/esp-idf/commit/2d378a5563bdae14560e39ecdaec3e8a2b08fd73) |\r\n| release/v5.2 | [812f7de](https://github.com/espressif/esp-idf/commit/812f7de59efdf79529e1c10cd788d324fa05f10d), [ea5e0f2](https://github.com/espressif/esp-idf/commit/ea5e0f245dc55114be6bdb36990bf61eacb697d7) |\r\n\r\n## Workarounds\r\n\r\nNone. Upgrade to a release that contains the fix (see Affected Versions above). As an interim mitigation, disable the BLE Mesh GATT bearers (PB-GATT and GATT Proxy) when they are not required, or build with the NimBLE host, which is not affected.\r\n\r\n## Credits\r\n\r\nWe would like to thank Nvidia Corporation for reporting this vulnerability and following up on responsible disclosure.",
+ "ghsa_id": "GHSA-rjvf-fxv5-x87j",
+ "html_url": "https://github.com/espressif/esp-idf/security/advisories/GHSA-rjvf-fxv5-x87j",
+ "identifiers": [
+  {
+   "type": "GHSA",
+   "value": "GHSA-rjvf-fxv5-x87j"
+  },
+  {
+   "type": "CVE",
+   "value": "CVE-2026-113781"
+  }
+ ],
+ "private_fork": null,
+ "published_at": "2026-11-02T03:00:46Z",
+ "publisher": {
+  "avatar_url": "https://avatars.githubusercontent.com/u/902446?v=4",
+  "events_url": "https://api.github.com/users/mahavirj/events{/privacy}",
+  "followers_url": "https://api.github.com/users/mahavirj/followers",
+  "following_url": "https://api.github.com/users/mahavirj/following{/other_user}",
+  "gists_url": "https://api.github.com/users/mahavirj/gists{/gist_id}",
+  "gravatar_id": "",
+  "html_url": "https://github.com/mahavirj",
+  "id": 902446,
+  "login": "mahavirj",
+  "node_id": "MDQ6VXNlcjkwMjQ0Ng==",
+  "organizations_url": "https://api.github.com/users/mahavirj/orgs",
+  "received_events_url": "https://api.github.com/users/mahavirj/received_events",
+  "repos_url": "https://api.github.com/users/mahavirj/repos",
+  "site_admin": false,
+  "starred_url": "https://api.github.com/users/mahavirj/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/mahavirj/subscriptions",
+  "type": "User",
+  "url": "https://api.github.com/users/mahavirj",
+  "user_view_type": "public"
+ },
+ "severity": "high",
+ "state": "published",
+ "submission": null,
+ "summary": "Stack-Based Buffer Overflow in BLE Mesh GATT Server Read Handling",
+ "updated_at": "2026-11-02T03:00:46Z",
+ "url": "https://api.github.com/repos/espressif/esp-idf/security-advisories/GHSA-rjvf-fxv5-x87j",
+ "vulnerabilities": [
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "ESP-BLE-MESH (ESP-IDF)"
+   },
+   "patched_versions": "v6.0.3",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v6.0.2"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "ESP-BLE-MESH (ESP-IDF)"
+   },
+   "patched_versions": "v5.5.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.5.5"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "ESP-BLE-MESH (ESP-IDF)"
+   },
+   "patched_versions": "v5.4.5 (yet to be released)",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.4.4"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "ESP-BLE-MESH (ESP-IDF)"
+   },
+   "patched_versions": "v5.3.6",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.3.5"
+  },
+  {
+   "package": {
+    "ecosystem": "other",
+    "name": "ESP-BLE-MESH (ESP-IDF)"
+   },
+   "patched_versions": "v5.2.8",
+   "vulnerable_functions": [],
+   "vulnerable_version_range": "v5.2.7"
+  }
+ ],
+ "withdrawn_at": null
+}
