@@ -29,7 +29,7 @@
  "cwes": [
   {
    "cwe_id": "CWE-120",
-   "name": "Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')"
+   "name": "Buffer Copy without Checking Size of Input"
   },
   {
    "cwe_id": "CWE-131",
